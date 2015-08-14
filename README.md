@@ -1,5 +1,7 @@
 # pgfutter
 
+<img align="right" alt="elephant" src="elephant.png" />
+
 Import CSV and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
@@ -7,7 +9,6 @@ have to deal with when you just want to dump some data into the database.
 Data transformations and concrete type mappings should all happen in the
 database. `pgfutter` only helps you to get the data into the database.
 
-<img align="right" alt="elephant" src="elephant.png" />
 
 ## Install
 
