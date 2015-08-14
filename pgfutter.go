@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 func failOnError(err error, msg string) {
@@ -136,15 +136,57 @@ func main() {
 				}
 			}
 		}
+		file.Seek(0, 0)
 		columnTypes := make(map[int](string))
 
 		for colIndex, maxLength := range columnLengths {
 			columnTypes[colIndex] = fmt.Sprintf("VARCHAR (%d)", maxLength)
 		}
 
-		for _, columnType := range columnTypes {
-			fmt.Println(columnType)
+		columns := make([]string, 0)
+		columnCreates := make([]string, 0)
+		for i := 0; i < len(columnTypes); i++ {
+			columnType := columnTypes[i]
+			columns = append(columns, fmt.Sprintf("col%d", i))
+			columnCreates = append(columnCreates, fmt.Sprintf("col%d %s", i, columnType))
 		}
+		columnQuery := strings.Join(columnCreates, ",")
+		createTable, err := db.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", "import.impiwimpi", columnQuery))
+		failOnError(err, "Could not create statement")
+
+		_, err = createTable.Exec()
+		failOnError(err, "Could not create table")
+
+		txn, err := db.Begin()
+		failOnError(err, "Could not start transaction")
+
+		stmt, err := txn.Prepare(pq.CopyInSchema("import", "impiwimpi", columns...))
+		failOnError(err, "Could not prepare copy in statement")
+
+		for {
+			record, err := reader.Read()
+			cols := make([]interface{}, len(columnTypes))
+			for i, b := range record {
+				cols[i] = b
+			}
+
+			if err == io.EOF {
+				break
+			}
+			failOnError(err, "Could not read csv")
+			_, err = stmt.Exec(cols...)
+			failOnError(err, "Could add bulk insert")
+		}
+
+		_, err = stmt.Exec()
+		failOnError(err, "Could not exec the bulk copy")
+
+		err = stmt.Close()
+		failOnError(err, "Could not close")
+
+		err = txn.Commit()
+		failOnError(err, "Could not commit transaction")
+
 	}
 
 	app.Run(os.Args)
