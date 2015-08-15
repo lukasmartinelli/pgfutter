@@ -25,6 +25,23 @@ PostgreSQL database.
 pgfutter csv <csv-file>
 ```
 
+Given the CSV.
+
+```
+name age friends
+Lukas 21 Alfred
+Alfred 25 
+```
+
+It will create the table
+
+name   | age | friends
+-------|-----|--------
+Lukas  | 21  | Alfred"
+Alfred | 21  |
+
+### More options
+
 You can also fully configure `pgfutter`.
 
 ```
@@ -33,13 +50,30 @@ pgfutter csv <csv-file> [--table people] [--skip-header-row] [--fields="id,name,
 
 ## Import JSON
 
+```
+pgfutter json events.json --flatten
+```
+
+The JSON import expects lines of individual JSON records.
+
+```json
+{name: "Lukas", age: 21, friends: ["Alfred"]}
+{name: "Alfred", age: 25, friends: []}
+```
+
+You can choose between storing the entire JSON object in the database or whether you want to flatten it.
+
+The flattened JSON from above would look like this.
+
+name   | age | friends
+-------|-----|--------
+Lukas  | 21  | ["Alfred"]
+Alfred | 21  | []
+
 When importing JSON you will get a single row with the new `JSONB` datatype.
 If you specify the `--expand` flag, all flat properties are automatically
 expanded into columns.
 
-```
-pgfutter json events.json
-```
 
 This can probably be compared with [pgloader](http://pgloader.io).
 >>>>>>> Improved readme
