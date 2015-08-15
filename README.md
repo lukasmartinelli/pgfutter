@@ -1,6 +1,6 @@
 # pgfutter
 
-<img align="right" alt="elephant" src="elephant.png" />
+<img align="right" alt="elephant" src="elephant.jpg" />
 
 Import CSV and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
