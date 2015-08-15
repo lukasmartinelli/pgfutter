@@ -30,7 +30,7 @@ Given the CSV.
 ```
 name age friends
 Lukas 21 Alfred
-Alfred 25 
+Alfred 25
 ```
 
 It will create the table
@@ -48,34 +48,16 @@ You can also fully configure `pgfutter`.
 pgfutter csv <csv-file> [--table people] [--skip-header-row] [--fields="id,name,birthday"] [--delimiter=" "] [--quote '"']
 ```
 
-## Import JSON
+### JSON
 
-```
-pgfutter json events.json --flatten
-```
-
-The JSON import expects lines of individual JSON records.
+The JSON import expects lines of individual JSON objects.
 
 ```json
 {"name": "Lukas", "age": 21, "friends": ["Alfred"]}
 {"name": "Alfred", "age": 25, "friends": []}
 ```
 
-You can choose between storing the entire JSON object in the database or whether you want to flatten it.
-
-The flattened JSON from above would look like this.
-All fields that can not be flattened are simply stored as plain unparsed JSON `TEXT`.
-
-name   | age | friends
--------|-----|--------
-Lukas  | 21  | ["Alfred"]
-Alfred | 21  | []
-
-When importing JSON you will get a single row with the new `JSONB` datatype.
-If you specify the `--expand` flag, all flat properties are automatically
-expanded into columns.
-
-Without the `--flatten` flag, your JSON object will be stored in a single plain-text column.
+Per default your JSON object will be stored in a single plain-text column.
 
 json                                                |
 ----------------------------------------------------|
@@ -85,3 +67,57 @@ json                                                |
 ## Alternatives
 
 For more sophisticated needs you should use [pgloader](http://pgloader.io).
+
+# Advances Usage Examples
+
+## Flattening objects
+
+This example is from my [repostruct](http://github.com/lukasmartinelli/repostruct)
+project, where I collect the filepaths of every GitHub repo.
+
+Assuming we have a file containing one JSON object per line for each Github repository.
+
+```json
+{
+    "repo":"sn4kebite/bin"
+    "social_counts": {
+        "forks":"0",
+        "watchers":"1",
+        "stars":"1"
+    },
+    "summary":{
+        "releases":"0",
+        "contributors":"0",
+        "commits":"7",
+        "branches":"1"
+    },
+    "language_statistics":[
+        ["Python", "65.1"],
+        ["Shell", "34.9"]
+    ]
+}
+```
+
+We can tell `pgfutter` to flatten the JSON graph directly and store
+the different fields as separate columns.
+
+```
+pgfutter json repos.json --flatten
+```
+
+This will flatten all single fields into columns and store
+array fields as plain text.
+
+```sql
+CREATE TABLE import.repos (
+    repo TEXT,
+    social_counts_forks TEXT,
+    social_counts_watchers TEXT,
+    social_counts_stars TEXT,
+    summary_releases TEXT,
+    summary_contributors TEXT,
+    summary_commits TEXT,
+    summary_branches TEXT,
+    language_statistics TEXT
+)
+```
