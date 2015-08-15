@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
@@ -21,46 +20,21 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func guessSeparator(file *os.File) string {
-	scanner := bufio.NewScanner(file)
-	separators := []string{",", ";", " ", "\t"}
-	separatorCounts := make(map[string]int)
-	for scanner.Scan() {
-		line := scanner.Text()
-		for _, sep := range separators {
-			separatorCounts[sep] += strings.Count(line, sep)
-		}
-	}
-
-	err := scanner.Err()
-	failOnError(err, "Could not scan file")
-
-	maxSep := separators[0]
-	maxCount := separatorCounts[maxSep]
-	for sep, count := range separatorCounts {
-		if count > maxCount {
-			maxCount = count
-			maxSep = sep
-		}
-	}
-	return maxSep
-}
-
 func importJson(c *cli.Context) {
 
 }
 
-func connect(connStr string) *sql.DB {
+func connect(connStr string, importSchema string) *sql.DB {
 	db, err := sql.Open("postgres", connStr)
 	failOnError(err, "Could not prepare connection to database")
 
 	err = db.Ping()
 	failOnError(err, "Could not reach the database")
 
-	createSchema, err := db.Prepare("CREATE SCHEMA IF NOT EXISTS import")
+	createSchema, err := db.Prepare("CREATE SCHEMA IF NOT EXISTS ?")
 	failOnError(err, "Could not create statement")
 
-	_, err = createSchema.Exec()
+	_, err = createSchema.Exec(importSchema)
 	failOnError(err, "Could not create schema")
 
 	return db
@@ -85,7 +59,7 @@ func importCsv(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	db := connect(createConnStr(c))
+	db := connect(createConnStr(c), c.GlobalString("schema"))
 	defer db.Close()
 
 	file, err := os.Open(filename)
@@ -93,7 +67,7 @@ func importCsv(c *cli.Context) {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	reader.Comma = rune(guessSeparator(file)[0])
+	reader.Comma = ','
 	file.Seek(0, 0)
 
 	columnLengths := make(map[int]int)
@@ -199,6 +173,16 @@ func main() {
 			Usage:  "password",
 			EnvVar: "DB_PASS",
 		},
+		cli.StringFlag{
+			Name:   "schema",
+			Value:  "import",
+			Usage:  "database schema",
+			EnvVar: "DB_SCHEMA",
+		},
+		cli.BoolFlag{
+			Name:  "abort",
+			Usage: "halt transaction on inconsistencies",
+		},
 	}
 
 	app.Commands = []cli.Command{
@@ -208,8 +192,8 @@ func main() {
 			Action: importJson,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "no-cache",
-					Usage: "Do not use cache when building the image.",
+					Name:  "flatten-graph, flatten",
+					Usage: "flatten fields into columns",
 				},
 			},
 		},
@@ -217,6 +201,30 @@ func main() {
 			Name:   "csv",
 			Usage:  "Import CSV into database",
 			Action: importCsv,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "skip-header",
+					Usage: "skip header row",
+				},
+				cli.StringFlag{
+					Name:  "fields",
+					Usage: "comma separated field names if no header row",
+				},
+				cli.StringFlag{
+					Name:  "delimiter, d",
+					Value: ",",
+					Usage: "field delimiter",
+				},
+				cli.StringFlag{
+					Name:  "quote, q",
+					Value: "\"",
+					Usage: "quote character",
+				},
+				cli.StringFlag{
+					Name:  "escape, e",
+					Usage: "escape character",
+				},
+			},
 		},
 	}
 
