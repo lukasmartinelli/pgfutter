@@ -32,10 +32,10 @@ func connect(connStr string, importSchema string) *sql.DB {
 	failOnError(err, "Could not reach the database")
 
 	createSchema, err := db.Prepare("CREATE SCHEMA IF NOT EXISTS ?")
-	failOnError(err, "Could not create statement")
+	failOnError(err, "Could not create schema statement")
 
 	_, err = createSchema.Exec(importSchema)
-	failOnError(err, "Could not create schema")
+	failOnError(err, fmt.Sprintf("Could not create schema %s", importSchema))
 
 	return db
 }
@@ -67,40 +67,27 @@ func importCsv(c *cli.Context) {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	reader.Comma = ','
-	file.Seek(0, 0)
+	reader.Comma = rune(c.String("delimiter")[0])
+	reader.LazyQuotes = true
 
-	columnLengths := make(map[int]int)
-	for {
-		record, err := reader.Read()
-
-		if err == io.EOF {
-			break
-		}
-		failOnError(err, "Could not read csv")
-
-		for i, column := range record {
-			if len(column) > columnLengths[i] {
-				columnLengths[i] = len(column)
-			}
-		}
-	}
-	file.Seek(0, 0)
-	columnTypes := make(map[int](string))
-
-	for colIndex, maxLength := range columnLengths {
-		columnTypes[colIndex] = fmt.Sprintf("VARCHAR (%d)", maxLength)
+	// Find out header fields
+	var fields []string
+	if c.Bool("skip-header") {
+		fields = strings.Split(c.String("fields"), ",")
+		reader.FieldsPerRecord = len(fields)
+	} else {
+		fields, err = reader.Read()
+		failOnError(err, "Could not read header row")
 	}
 
-	columns := make([]string, 0)
-	columnCreates := make([]string, 0)
-	for i := 0; i < len(columnTypes); i++ {
-		columnType := columnTypes[i]
-		columns = append(columns, fmt.Sprintf("col%d", i))
-		columnCreates = append(columnCreates, fmt.Sprintf("col%d %s", i, columnType))
+	schema := c.GlobalString("schema")
+	tableName := "impowimpi"
+	columns := make([]string, len(fields))
+	for i, field := range fields {
+		columns[i] = fmt.Sprintf("%s TEXT", field)
 	}
-	columnQuery := strings.Join(columnCreates, ",")
-	createTable, err := db.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", "import.impiwimpi", columnQuery))
+	columnDefinitions := strings.Join(columns, ",")
+	createTable, err := db.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", schema+"."+tableName, columnDefinitions))
 	failOnError(err, "Could not create statement")
 
 	_, err = createTable.Exec()
@@ -109,12 +96,12 @@ func importCsv(c *cli.Context) {
 	txn, err := db.Begin()
 	failOnError(err, "Could not start transaction")
 
-	stmt, err := txn.Prepare(pq.CopyInSchema("import", "impiwimpi", columns...))
+	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, fields...))
 	failOnError(err, "Could not prepare copy in statement")
 
 	for {
 		record, err := reader.Read()
-		cols := make([]interface{}, len(columnTypes))
+		cols := make([]interface{}, len(fields))
 		for i, b := range record {
 			cols[i] = b
 		}
@@ -214,15 +201,6 @@ func main() {
 					Name:  "delimiter, d",
 					Value: ",",
 					Usage: "field delimiter",
-				},
-				cli.StringFlag{
-					Name:  "quote, q",
-					Value: "\"",
-					Usage: "quote character",
-				},
-				cli.StringFlag{
-					Name:  "escape, e",
-					Usage: "escape character",
 				},
 			},
 		},
