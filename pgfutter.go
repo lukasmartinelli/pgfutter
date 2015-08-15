@@ -63,7 +63,7 @@ func createTableStatement(db *sql.DB, schema string, tableName string, columns [
 	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions)
 
 	statement, err := db.Prepare(tableSchema)
-	failOnError(err, "Could not create statement")
+	failOnError(err, fmt.Sprintf("Could not create table schema %s", tableSchema))
 
 	return statement
 }
@@ -85,6 +85,16 @@ func parseColumns(c *cli.Context, reader *csv.Reader) []string {
 	return columns
 }
 
+func parseTableName(c *cli.Context, filename string) string {
+	tableName := c.GlobalString("table")
+	if tableName == "" {
+		base := filepath.Base(filename)
+		ext := filepath.Ext(filename)
+		tableName = strings.TrimSuffix(base, ext)
+	}
+	return strings.ToLower(tableName)
+}
+
 func importCsv(c *cli.Context) {
 	filename := c.Args().First()
 	if filename == "" {
@@ -92,7 +102,10 @@ func importCsv(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	db := connect(createConnStr(c), c.GlobalString("schema"))
+	schema := c.GlobalString("schema")
+	tableName := parseTableName(c, filename)
+
+	db := connect(createConnStr(c), schema)
 	defer db.Close()
 
 	file, err := os.Open(filename)
@@ -107,10 +120,6 @@ func importCsv(c *cli.Context) {
 
 	columns := parseColumns(c, reader)
 	reader.FieldsPerRecord = len(columns)
-
-	schema := c.GlobalString("schema")
-	tableName := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
-	tableName = strings.ToLower(tableName)
 
 	createTable := createTableStatement(db, schema, tableName, columns)
 	_, err = createTable.Exec()
@@ -150,7 +159,7 @@ func importCsv(c *cli.Context) {
 func main() {
 	app := cli.NewApp()
 	app.Name = "pgfutter"
-	app.Usage = "Imports anything into PostgreSQL"
+	app.Usage = "Import JSON and CSV into PostgreSQL the easy way"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "dbname, db",
@@ -187,6 +196,11 @@ func main() {
 			Value:  "import",
 			Usage:  "database schema",
 			EnvVar: "DB_SCHEMA",
+		},
+		cli.StringFlag{
+			Name:   "table",
+			Usage:  "destination table",
+			EnvVar: "DB_TABLE",
 		},
 		cli.BoolFlag{
 			Name:  "abort",
