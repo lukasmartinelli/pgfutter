@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/codegangsta/cli"
@@ -31,10 +32,10 @@ func connect(connStr string, importSchema string) *sql.DB {
 	err = db.Ping()
 	failOnError(err, "Could not reach the database")
 
-	createSchema, err := db.Prepare("CREATE SCHEMA IF NOT EXISTS ?")
+	createSchema, err := db.Prepare(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", importSchema))
 	failOnError(err, "Could not create schema statement")
 
-	_, err = createSchema.Exec(importSchema)
+	_, err = createSchema.Exec()
 	failOnError(err, fmt.Sprintf("Could not create schema %s", importSchema))
 
 	return db
@@ -59,9 +60,29 @@ func createTableStatement(db *sql.DB, schema string, tableName string, columns [
 	}
 	columnDefinitions := strings.Join(columnTypes, ",")
 	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
-	statement, err := db.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions))
+	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions)
+
+	statement, err := db.Prepare(tableSchema)
 	failOnError(err, "Could not create statement")
+
 	return statement
+}
+
+func parseColumns(c *cli.Context, reader *csv.Reader) []string {
+	var err error
+	var columns []string
+	if c.Bool("skip-header") {
+		columns = strings.Split(c.String("fields"), ",")
+	} else {
+		columns, err = reader.Read()
+		failOnError(err, "Could not read header row")
+	}
+
+	for i, column := range columns {
+		columns[i] = strings.ToLower(column)
+	}
+
+	return columns
 }
 
 func importCsv(c *cli.Context) {
@@ -83,17 +104,13 @@ func importCsv(c *cli.Context) {
 	reader.LazyQuotes = true
 
 	// Find out header fields
-	var columns []string
-	if c.Bool("skip-header") {
-		columns = strings.Split(c.String("fields"), ",")
-		reader.FieldsPerRecord = len(columns)
-	} else {
-		columns, err = reader.Read()
-		failOnError(err, "Could not read header row")
-	}
+
+	columns := parseColumns(c, reader)
+	reader.FieldsPerRecord = len(columns)
 
 	schema := c.GlobalString("schema")
-	tableName := "impowimpi"
+	tableName := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
+	tableName = strings.ToLower(tableName)
 
 	createTable := createTableStatement(db, schema, tableName, columns)
 	_, err = createTable.Exec()
