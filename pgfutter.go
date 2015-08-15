@@ -52,6 +52,18 @@ func createConnStr(c *cli.Context) string {
 	)
 }
 
+func createTableStatement(db *sql.DB, schema string, tableName string, columns []string) *sql.Stmt {
+	columnTypes := make([]string, len(columns))
+	for i, col := range columns {
+		columnTypes[i] = fmt.Sprintf("%s TEXT", col)
+	}
+	columnDefinitions := strings.Join(columnTypes, ",")
+	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
+	statement, err := db.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions))
+	failOnError(err, "Could not create statement")
+	return statement
+}
+
 func importCsv(c *cli.Context) {
 	filename := c.Args().First()
 	if filename == "" {
@@ -71,39 +83,33 @@ func importCsv(c *cli.Context) {
 	reader.LazyQuotes = true
 
 	// Find out header fields
-	var fields []string
+	var columns []string
 	if c.Bool("skip-header") {
-		fields = strings.Split(c.String("fields"), ",")
-		reader.FieldsPerRecord = len(fields)
+		columns = strings.Split(c.String("fields"), ",")
+		reader.FieldsPerRecord = len(columns)
 	} else {
-		fields, err = reader.Read()
+		columns, err = reader.Read()
 		failOnError(err, "Could not read header row")
 	}
 
 	schema := c.GlobalString("schema")
 	tableName := "impowimpi"
-	columns := make([]string, len(fields))
-	for i, field := range fields {
-		columns[i] = fmt.Sprintf("%s TEXT", field)
-	}
-	columnDefinitions := strings.Join(columns, ",")
-	createTable, err := db.Prepare(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", schema+"."+tableName, columnDefinitions))
-	failOnError(err, "Could not create statement")
 
+	createTable := createTableStatement(db, schema, tableName, columns)
 	_, err = createTable.Exec()
 	failOnError(err, "Could not create table")
 
 	txn, err := db.Begin()
 	failOnError(err, "Could not start transaction")
 
-	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, fields...))
+	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, columns...))
 	failOnError(err, "Could not prepare copy in statement")
 
 	for {
+		cols := make([]interface{}, len(columns))
 		record, err := reader.Read()
-		cols := make([]interface{}, len(fields))
-		for i, b := range record {
-			cols[i] = b
+		for i, col := range record {
+			cols[i] = col
 		}
 
 		if err == io.EOF {
@@ -122,7 +128,6 @@ func importCsv(c *cli.Context) {
 
 	err = txn.Commit()
 	failOnError(err, "Could not commit transaction")
-
 }
 
 func main() {
