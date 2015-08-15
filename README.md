@@ -57,13 +57,14 @@ pgfutter json events.json --flatten
 The JSON import expects lines of individual JSON records.
 
 ```json
-{name: "Lukas", age: 21, friends: ["Alfred"]}
-{name: "Alfred", age: 25, friends: []}
+{"name": "Lukas", "age": 21, "friends": ["Alfred"]}
+{"name": "Alfred", "age": 25, "friends": []}
 ```
 
 You can choose between storing the entire JSON object in the database or whether you want to flatten it.
 
 The flattened JSON from above would look like this.
+All fields that can not be flattened are simply stored as plain unparsed JSON `TEXT`.
 
 name   | age | friends
 -------|-----|--------
@@ -74,6 +75,13 @@ When importing JSON you will get a single row with the new `JSONB` datatype.
 If you specify the `--expand` flag, all flat properties are automatically
 expanded into columns.
 
+Without the `--flatten` flag, your JSON object will be stored in a single plain-text column.
 
-This can probably be compared with [pgloader](http://pgloader.io).
->>>>>>> Improved readme
+json                                                |
+----------------------------------------------------|
+{"name": "Lukas", "age": 21, "friends": ["Alfred"]} |
+{"name": "Alfred", "age": 25, "friends": []}        |
+
+## Alternatives
+
+For more sophisticated needs you should use [pgloader](http://pgloader.io).
