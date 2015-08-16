@@ -40,6 +40,11 @@ function import_and_test_csv() {
 
 recreate_db
 
+import_and_test_csv "parking_garage_availability" "$SAMPLES_DIR/parking_garage_availability.csv"
+import_and_test_csv "local_severe_wheather_warning_systems" "$SAMPLES_DIR/local_severe_wheather_warning_systems.csv"
+import_and_test_csv "montgomery_crime" "$SAMPLES_DIR/montgomery_crime.csv"
+import_and_test_csv "employee_salaries" "$SAMPLES_DIR/employee_salaries.csv"
+import_and_test_csv "residential_permits" "$SAMPLES_DIR/residential_permits.csv"
 import_and_test_csv "steuertarife" "$SAMPLES_DIR/Steuertarife.csv"
 import_and_test_csv "vermoegensklassen" "$SAMPLES_DIR/Vermoegensklassen.csv"
 import_and_test_csv "distribution_of_wealth_switzerland" "$SAMPLES_DIR/distribution_of_wealth_switzerland.csv"

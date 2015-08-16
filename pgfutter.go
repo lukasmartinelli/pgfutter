@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/codegangsta/cli"
@@ -18,10 +19,19 @@ import (
 func postgresify(identifier string) string {
 	str := strings.ToLower(identifier)
 	str = strings.Replace(str, " ", "_", -1)
+	str = strings.Replace(str, "/", "_", -1)
+	str = strings.Replace(str, ".", "_", -1)
+	str = strings.Replace(str, ":", "_", -1)
 	str = strings.Replace(str, "-", "_", -1)
 	str = strings.Replace(str, ",", "_", -1)
 	str = strings.Replace(str, "?", "", -1)
 	str = strings.Replace(str, "!", "", -1)
+
+	first_letter := string(str[0])
+	if _, err := strconv.Atoi(first_letter); err == nil {
+		str = "_" + str
+	}
+
 	return str
 }
 
