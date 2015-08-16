@@ -7,8 +7,10 @@ go:
   - tip
 install:
   - go get github.com/codegangsta/cli
-  - go get github.com/streadway/amqp
-before_script:
-  - psql -c 'create database integration_test;' -U postgres
-env:
-  - DB_NAME=integration_test
+  - go get github.com/lib/pq
+script:
+  - go install
+  - ./test.sh
+cache:
+  directories:
+  - samples
