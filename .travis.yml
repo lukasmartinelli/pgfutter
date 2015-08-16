@@ -21,4 +21,4 @@ install:
   - go get github.com/lib/pq
   - ./download_samples.sh
 script:
-  - ./test.sh
+  - go install && ./test.sh
