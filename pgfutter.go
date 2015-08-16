@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -22,7 +24,15 @@ func failOnError(err error, msg string) {
 }
 
 func importJson(c *cli.Context) {
-
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		var record map[string]interface{}
+		value := scanner.Text()
+		err := json.Unmarshal([]byte(value), &record)
+		failOnError(err, "Could not parse JSON")
+		fmt.Println("%v", record)
+	}
+	failOnError(scanner.Err(), "Could not scan stdin")
 }
 
 func connect(connStr string, importSchema string) *sql.DB {
@@ -115,8 +125,6 @@ func importCsv(c *cli.Context) {
 	reader := csv.NewReader(file)
 	reader.Comma = rune(c.String("delimiter")[0])
 	reader.LazyQuotes = true
-
-	// Find out header fields
 
 	columns := parseColumns(c, reader)
 	reader.FieldsPerRecord = len(columns)
