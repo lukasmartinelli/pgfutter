@@ -15,6 +15,16 @@ import (
 	"github.com/lukasmartinelli/pgfutter/lib"
 )
 
+func postgresify(identifier string) string {
+	str := strings.ToLower(identifier)
+	str = strings.Replace(str, " ", "_", -1)
+	str = strings.Replace(str, "-", "_", -1)
+	str = strings.Replace(str, ",", "_", -1)
+	str = strings.Replace(str, "?", "", -1)
+	str = strings.Replace(str, "!", "", -1)
+	return str
+}
+
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
@@ -76,7 +86,7 @@ func parseColumns(c *cli.Context, reader *csv.Reader) []string {
 	}
 
 	for i, column := range columns {
-		columns[i] = strings.ToLower(column)
+		columns[i] = postgresify(column)
 	}
 
 	return columns
