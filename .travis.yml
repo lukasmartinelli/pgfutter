@@ -1,14 +1,16 @@
 language: go
-matrix:
-  include:
-    - addons:
-        postgresql: 9.1
-    - addons:
-        postgresql: 9.2
-    - addons:
-        postgresql: 9.3
-    - addons:
-        postgresql: 9.4
+sudo: false
+env:
+  matrix:
+    include:
+      - addons:
+          postgresql: 9.1
+      - addons:
+          postgresql: 9.2
+      - addons:
+          postgresql: 9.3
+      - addons:
+          postgresql: 9.4
 go:
   - 1.3
   - 1.4
