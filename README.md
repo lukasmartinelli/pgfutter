@@ -6,17 +6,13 @@ Import CSV and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
-Data transformations and concrete type mappings should all happen in the
-database. `pgfutter` only helps you to get the data into the database.
-
-
 ## Install
 
 You can download a single binary for Linux, OSX or Windows.
 
 ## Import CSV
 
-We want to import a csv file with a header row.
+We want to import a CSV file with a header row.
 `pgfutter` will automatically detect the delimiter and whether it has
 a header row or not. It will create a table and copy the data over to the
 PostgreSQL database.
