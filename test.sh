@@ -10,14 +10,6 @@ function recreate_db() {
   psql -U ${DB_USER} -c "create database ${DB_NAME};"
 }
 
-function download_csv_samples() {
-    mkdir -p $SAMPLES_DIR
-    cd $SAMPLES_DIR
-    wget -nc -O customer_complaints.csv https://data.consumerfinance.gov/api/views/x94z-ydhh/rows.csv
-    wget -nc -O traffic_violations.csv https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv
-    cd $CWD
-}
-
 function query_counts() {
     local table=$1
     local counts=$(psql -U ${DB_USER} -d ${DB_NAME} -t -c "select count(*) from ${DB_SCHEMA}.${table}")
@@ -28,10 +20,12 @@ function import_and_test_csv() {
     local table=$1
     local filename=$2
 
-    pgfutter csv "$filename"
+    pgfutter --db $DB_NAME --user $DB_USER csv "$filename"
     if [ $? -ne 0 ]; then
         echo "pgfutter could not import $filename"
         exit 300
+    else
+        echo "Imported $table"
     fi
 
     local line_count=$(cat "$filename" | wc -l)
@@ -39,7 +33,7 @@ function import_and_test_csv() {
     local db_count=$(query_counts $table)
 
     if [ "$db_count" -ne "$expected_db_count" ]; then
-        echo "Import for $table failed. Only $db_count rows of $line_count rows imported"
+        echo "Import for $table is incomplete. Only $db_count rows of $line_count rows imported"
         exit 201
     fi
 }
