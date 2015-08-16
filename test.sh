@@ -39,7 +39,6 @@ function import_and_test_csv() {
 }
 
 recreate_db
-download_csv_samples
 
 import_and_test_csv "customer_complaints" "$SAMPLES_DIR/customer_complaints.csv"
 import_and_test_csv "traffic_violations" "$SAMPLES_DIR/traffic_violations.csv"
