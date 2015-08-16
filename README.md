@@ -117,3 +117,19 @@ CREATE TABLE import.repos (
     language_statistics TEXT
 )
 ```
+
+## Regression Tests
+
+The program is tested with open data sets from around the world.
+
+Download all samples into the folder `samples`.
+
+```bash
+./download-samples.sh
+```
+
+Run import regression tests against the samples.
+
+```bash
+./test.sh
+```
