@@ -1,6 +1,4 @@
 #!/bin/bash
-source tools/assert.sh
-
 CWD=$(pwd)
 SAMPLES_DIR="$CWD/samples"
 DB_USER="postgres"
@@ -26,11 +24,28 @@ function query_counts() {
     echo "$counts"
 }
 
+function import_and_test_csv() {
+    local table=$1
+    local filename=$2
+
+    pgfutter csv "$filename"
+    if [ $? -ne 0 ]; then
+        echo "pgfutter could not import $filename"
+        exit 300
+    fi
+
+    local line_count=$(cat "$filename" | wc -l)
+    local expected_db_count=$(expr $line_count - 1)
+    local db_count=$(query_counts $table)
+
+    if [ "$db_count" -ne "$expected_db_count" ]; then
+        echo "Import for $table failed. Only $db_count rows of $line_count rows imported"
+        exit 201
+    fi
+}
+
 recreate_db
 download_csv_samples
 
-pgfutter csv "$SAMPLES_DIR/customer_complaints.csv"
-assert $(wc -l "$SAMPLES_DIR/customer_complaints.csv") $(query_counts customer_complaints)
-
-pgfutter csv "$SAMPLES_DIR/traffic_violations.csv"
-assert $(wc -l "$SAMPLES_DIR/traffic_violations.csv") $(query_counts traffic_violations)
+import_and_test_csv "customer_complaints" "$SAMPLES_DIR/customer_complaints.csv"
+import_and_test_csv "traffic_violations" "$SAMPLES_DIR/traffic_violations.csv"
