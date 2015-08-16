@@ -99,7 +99,7 @@ func parseTableName(c *cli.Context, filename string) string {
 		ext := filepath.Ext(filename)
 		tableName = strings.TrimSuffix(base, ext)
 	}
-	return strings.ToLower(tableName)
+	return postgresify(tableName)
 }
 
 func importCsv(c *cli.Context) {

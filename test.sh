@@ -40,5 +40,12 @@ function import_and_test_csv() {
 
 recreate_db
 
+import_and_test_csv "steuertarife" "$SAMPLES_DIR/Steuertarife.csv"
+import_and_test_csv "vermoegensklassen" "$SAMPLES_DIR/Vermoegensklassen.csv"
+import_and_test_csv "distribution_of_wealth_switzerland" "$SAMPLES_DIR/distribution_of_wealth_switzerland.csv"
 import_and_test_csv "customer_complaints" "$SAMPLES_DIR/customer_complaints.csv"
+import_and_test_csv "whitehouse_visits_2014" "$SAMPLES_DIR/whitehouse_visits_2014.csv"
 import_and_test_csv "traffic_violations" "$SAMPLES_DIR/traffic_violations.csv"
+import_and_test_csv "wealth_groups" "$SAMPLES_DIR/Wealth_groups.csv"
+import_and_test_csv "qip12_tabdaten" "$SAMPLES_DIR/qip12_tabdaten.csv"
+import_and_test_csv "metadatenbank_vernehmlassungen_ogd_v1_3" "$SAMPLES_DIR/Metadatenbank-Vernehmlassungen-OGD-V1-3.csv"
