@@ -4,12 +4,26 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/codegangsta/cli"
 )
+
+func importJSONFromArrayField(c *cli.Context) {
+	file, err := ioutil.ReadFile("./config.json")
+	failOnError(err, "Cannot open file")
+
+	var record map[string]interface{}
+	err = json.Unmarshal(file, &record)
+	failOnError(err, "Invalid JSON file")
+
+	arrayField := c.GlobalString("from-array-field")
+	array := record[arrayField]
+	fmt.Printf("%+v", array)
+}
 
 func importJSON(c *cli.Context) {
 	cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
@@ -18,6 +32,11 @@ func importJSON(c *cli.Context) {
 	if filename == "" {
 		cli.ShowCommandHelp(c, "json")
 		os.Exit(1)
+	}
+
+	if c.GlobalString("from-array-field") != "" {
+		importJSONFromArrayField(c)
+		return
 	}
 
 	file, err := os.Open(filename)
@@ -38,6 +57,10 @@ func importJSON(c *cli.Context) {
 				log.Fatalln(msg)
 				panic(msg)
 			}
+		} else {
+			row, err := json.Marshal(record)
+			failOnError(err, "Can not deserialize")
+			fmt.Println(row)
 		}
 	}
 	failOnError(scanner.Err(), "Could not parse")

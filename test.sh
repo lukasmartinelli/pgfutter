@@ -16,6 +16,19 @@ function query_counts() {
     echo "$counts"
 }
 
+function import_and_test_json() {
+    local table="employee_salaries"
+    local filename="$SAMPLES_DIR/employee_salaries.json"
+    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER json "$filename" --from-array-field="data"
+    if [ $? -ne 0 ]; then
+        echo "pgfutter could not import $filename"
+        exit 300
+    else
+        local db_count=$(query_counts $table)
+        echo "Imported $(expr $db_count) records into $table"
+    fi
+}
+
 function import_and_test_csv() {
     local table=$1
     local filename=$2

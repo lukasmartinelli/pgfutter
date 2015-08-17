@@ -2,6 +2,13 @@
 CWD=$(pwd)
 SAMPLES_DIR="$CWD/samples"
 
+function download_json_samples() {
+    mkdir -p $SAMPLES_DIR
+    cd $SAMPLES_DIR
+    wget -nc -O employee_salaries.json https://data.montgomerycountymd.gov/api/views/54rh-89p8/rows.json
+    cd $CWD
+}
+
 function download_csv_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
@@ -24,4 +31,5 @@ function download_csv_samples() {
     cd $CWD
 }
 
+download_json_samples
 download_csv_samples
