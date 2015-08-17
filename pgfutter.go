@@ -77,10 +77,6 @@ func main() {
 					Name:  "flatten-graph, flatten",
 					Usage: "flatten fields into columns",
 				},
-				cli.BoolFlag{
-					Name:  "single-object",
-					Usage: "parse file as single JSON object",
-				},
 			},
 		},
 		{
