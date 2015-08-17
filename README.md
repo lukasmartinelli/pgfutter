@@ -6,6 +6,10 @@ Import CSV and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
+`pgfutter` will only help you to get the data into the database. After that
+you should sanitize and normalize the data according to your desired
+database schema.
+
 ## Install
 
 You can download a single binary for Linux, OSX or Windows.
@@ -26,12 +30,10 @@ chmod +x pgfutter
 ./pgfutter --help
 ```
 
-If you are using Windows or 32-Bit architectures you need to [download the appropriate binary
+If you are using Windows or 32-bit architectures you need to [download the appropriate binary
 yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
 ## Import CSV
-
-`pgfutter` is great to take a quick look at open data sets in the database.
 
 Let's import all traffic violations of Montgomery, Alabama.
 
@@ -45,6 +47,8 @@ table and copy the rows.
 ```bash
 pgfutter csv traffic_violations.csv
 ```
+
+## Database Connection
 
 Database connection details can be provided via environment variables
 or as separate flags.
@@ -61,14 +65,14 @@ name        | default     | description
 ### Dealing with different CSV formats
 
 `pgfutter` will only deal with CSV files conforming to RFC 4180.
-Most often you want to specify a custom delimiter (default: `,`)
-or custom encoding (default: `utf-8`).
+Most often you want to specify a custom delimiter (default: `,`).
 
 ```bash
 pgfutter csv -d "\t" traffic_violations.csv
 ```
 
-Specifying quote characters other than `"` is not supported.
+You have to use `"` as a quoting character and `\` as escape character.
+You might omit the quoting character if it is not necessary.
 
 ### Custom header fields
 
@@ -79,10 +83,16 @@ skip the header row and pass a comma separated field name list.
 pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
 ```
 
+### Encoding
+
+All CSV files need to be `utf-8` encoded. No other encoding is supported.
+Encoding is a nasty topic and you should deal with it before it enters
+the database.
+
 ### Dealing with invalid input
 
 A lot of CSV files don't confirm to proper CSV standards. If you want
-to ignore errors you can pass the `--ignore-errors` flags which will
+to ignore errors you can pass the `--ignore-errors` flag which will
 commit the transaction even if some rows cannot be imported.
 The failed rows will be written to stdout so you can clean them up with other tools.
 
