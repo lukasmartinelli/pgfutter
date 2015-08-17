@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +15,6 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/lib/pq"
-	"github.com/lukasmartinelli/pgfutter/lib"
 )
 
 func postgresify(identifier string) string {
@@ -40,6 +41,17 @@ func failOnError(err error, msg string) {
 		log.Fatalf("%s: %s", msg, err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
+}
+
+func ImportJson(c *cli.Context) {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		var record map[string]interface{}
+		value := scanner.Text()
+		err := json.Unmarshal([]byte(value), &record)
+		failOnError(err, "Could not unmarshal")
+	}
+	failOnError(scanner.Err(), "Could not parse")
 }
 
 func connect(connStr string, importSchema string) *sql.DB {
@@ -227,7 +239,7 @@ func main() {
 		{
 			Name:   "json",
 			Usage:  "Import JSON objects into database",
-			Action: lib.ImportJson,
+			Action: ImportJson,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "flatten-graph, flatten",

@@ -133,3 +133,12 @@ Run import regression tests against the samples.
 ```bash
 ./test.sh
 ```
+
+## Cross-compiling
+
+We use [gox](https://github.com/mitchellh/gox) to create distributable
+binaries for Windows, OSX and Linux.
+
+```bash
+docker run --rm -v "$(pwd)":/usr/src/pgfutter -w /usr/src/pgfutter tcnksm/gox:1.4.2-light
+```
