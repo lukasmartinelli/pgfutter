@@ -31,7 +31,7 @@ yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
 ## Import CSV
 
-`pgfutter` is a great to take a quick look at Open Data sets in your favorite database.
+`pgfutter` is great to take a quick look at open data sets in the database.
 
 Let's import all traffic violations of Montgomery, Alabama.
 
@@ -46,7 +46,8 @@ table and copy the rows.
 pgfutter csv traffic_violations.csv
 ```
 
-Database connection details are best provided via env vars.
+Database connection details can be provided via environment variables
+or as separate flags.
 
 name        | default     | description
 ------------|-------------|------------------------------
@@ -60,12 +61,14 @@ name        | default     | description
 ### Dealing with different CSV formats
 
 `pgfutter` will only deal with CSV files conforming to RFC 4180.
-
-Most often you want to specify a custom delimiter.
+Most often you want to specify a custom delimiter (default: `,`)
+or custom encoding (default: `utf-8`).
 
 ```bash
 pgfutter csv -d "\t" traffic_violations.csv
 ```
+
+Specifying quote characters other than `"` is not supported.
 
 ### Custom header fields
 
@@ -78,7 +81,7 @@ pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
 
 ### Dealing with invalid input
 
-Sadly alot of CSV files don't confirm to proper CSV standards. If you want
+A lot of CSV files don't confirm to proper CSV standards. If you want
 to ignore errors you can pass the `--ignore-errors` flags which will
 commit the transaction even if some rows cannot be imported.
 The failed rows will be written to stdout so you can clean them up with other tools.
@@ -89,7 +92,7 @@ pgfutter --ignore-errors csv traffic_violations.csv 2> traffic_violations_errors
 
 ### Custom Table
 
-`pgfutter` will take the filename as the table name. If you want to specify a custom table name or a precreated table you can specify explicitely.
+`pgfutter` will take the sanitized filename as the table name. If you want to specify a custom table name or import into your predefined table schema you can specify the table explicitly.
 
 ```bash
 pgfutter csv --table violations traffic_violations.csv
