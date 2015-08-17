@@ -62,7 +62,7 @@ func main() {
 			EnvVar: "DB_TABLE",
 		},
 		cli.BoolFlag{
-			Name:  "abort",
+			Name:  "ignore-errors",
 			Usage: "halt transaction on inconsistencies",
 		},
 	}

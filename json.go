@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -18,12 +20,25 @@ func importJSON(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	scanner := bufio.NewScanner(os.Stdin)
+	file, err := os.Open(filename)
+	failOnError(err, "Cannot open file")
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		var record map[string]interface{}
 		value := scanner.Text()
 		err := json.Unmarshal([]byte(value), &record)
-		failOnError(err, "Could not unmarshal")
+
+		if err != nil {
+			if c.GlobalBool("ignore-errors") {
+				os.Stderr.WriteString(value)
+			} else {
+				msg := fmt.Sprintf("Invalid JSON: %s", value)
+				log.Fatalln(msg)
+				panic(msg)
+			}
+		}
 	}
 	failOnError(scanner.Err(), "Could not parse")
 }
