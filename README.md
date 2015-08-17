@@ -94,7 +94,7 @@ pgfutter --ignore-errors csv traffic_violations.csv 2> traffic_violations_errors
 pgfutter csv --table violations traffic_violations.csv
 ```
 
-## JSON
+## Import JSON
 
 Line based JSON files are more and more common.
 Each line should contain an individual JSON object.
@@ -106,12 +106,12 @@ Each line should contain an individual JSON object.
 
 Per default your JSON objects will be stored in a single plain-text column.
 
-json                                                |
-----------------------------------------------------|
-{"name": "Lukas", "age": 21, "friends": ["Alfred"]} |
-{"name": "Alfred", "age": 25, "friends": []}        |
+json                                                  |
+------------------------------------------------------|
+`{"name": "Lukas", "age": 21, "friends": ["Alfred"]}` |
+`{"name": "Alfred", "age": 25, "friends": []}`        |
 
-PostgreSQL has excellent JSON support which means you can then start
+[PostgreSQL has excellent JSON support](http://www.postgresql.org/docs/9.3/static/functions-json.html) which means you can then start
 normalizing your data.
 
 ```sql
