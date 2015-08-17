@@ -1,85 +1,21 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
-	"encoding/csv"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/codegangsta/cli"
-	"github.com/lib/pq"
 )
-
-func postgresify(identifier string) string {
-	str := strings.ToLower(identifier)
-	str = strings.Replace(str, " ", "_", -1)
-	str = strings.Replace(str, "/", "_", -1)
-	str = strings.Replace(str, ".", "_", -1)
-	str = strings.Replace(str, ":", "_", -1)
-	str = strings.Replace(str, "-", "_", -1)
-	str = strings.Replace(str, ",", "_", -1)
-	str = strings.Replace(str, "?", "", -1)
-	str = strings.Replace(str, "!", "", -1)
-
-	first_letter := string(str[0])
-	if _, err := strconv.Atoi(first_letter); err == nil {
-		str = "_" + str
-	}
-
-	return str
-}
 
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
-}
-
-func ImportJson(c *cli.Context) {
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		var record map[string]interface{}
-		value := scanner.Text()
-		err := json.Unmarshal([]byte(value), &record)
-		failOnError(err, "Could not unmarshal")
-	}
-	failOnError(scanner.Err(), "Could not parse")
-}
-
-func connect(connStr string, importSchema string) *sql.DB {
-	db, err := sql.Open("postgres", connStr)
-	failOnError(err, "Could not prepare connection to database")
-
-	err = db.Ping()
-	failOnError(err, "Could not reach the database")
-
-	createSchema, err := db.Prepare(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", importSchema))
-	failOnError(err, "Could not create schema statement")
-
-	_, err = createSchema.Exec()
-	failOnError(err, fmt.Sprintf("Could not create schema %s", importSchema))
-
-	return db
-}
-
-func createConnStr(c *cli.Context) string {
-	otherParams := "sslmode=disable connect_timeout=5"
-	return fmt.Sprintf("user=%s dbname=%s password='%s' host=%s port=%s %s",
-		c.GlobalString("username"),
-		c.GlobalString("dbname"),
-		c.GlobalString("pass"),
-		c.GlobalString("host"),
-		c.GlobalString("port"),
-		otherParams,
-	)
 }
 
 func createTableStatement(db *sql.DB, schema string, tableName string, columns []string) *sql.Stmt {
@@ -97,23 +33,6 @@ func createTableStatement(db *sql.DB, schema string, tableName string, columns [
 	return statement
 }
 
-func parseColumns(c *cli.Context, reader *csv.Reader) []string {
-	var err error
-	var columns []string
-	if c.Bool("skip-header") {
-		columns = strings.Split(c.String("fields"), ",")
-	} else {
-		columns, err = reader.Read()
-		failOnError(err, "Could not read header row")
-	}
-
-	for i, column := range columns {
-		columns[i] = postgresify(column)
-	}
-
-	return columns
-}
-
 func parseTableName(c *cli.Context, filename string) string {
 	tableName := c.GlobalString("table")
 	if tableName == "" {
@@ -122,65 +41,6 @@ func parseTableName(c *cli.Context, filename string) string {
 		tableName = strings.TrimSuffix(base, ext)
 	}
 	return postgresify(tableName)
-}
-
-func importCsv(c *cli.Context) {
-	filename := c.Args().First()
-	if filename == "" {
-		fmt.Println("Please provide name of file to import")
-		os.Exit(1)
-	}
-
-	schema := c.GlobalString("schema")
-	tableName := parseTableName(c, filename)
-
-	db := connect(createConnStr(c), schema)
-	defer db.Close()
-
-	file, err := os.Open(filename)
-	failOnError(err, "Cannot open file")
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	reader.Comma = rune(c.String("delimiter")[0])
-	reader.LazyQuotes = true
-
-	columns := parseColumns(c, reader)
-	reader.FieldsPerRecord = len(columns)
-
-	createTable := createTableStatement(db, schema, tableName, columns)
-	_, err = createTable.Exec()
-	failOnError(err, "Could not create table")
-
-	txn, err := db.Begin()
-	failOnError(err, "Could not start transaction")
-
-	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, columns...))
-	failOnError(err, "Could not prepare copy in statement")
-
-	for {
-		cols := make([]interface{}, len(columns))
-		record, err := reader.Read()
-		for i, col := range record {
-			cols[i] = col
-		}
-
-		if err == io.EOF {
-			break
-		}
-		failOnError(err, "Could not read csv")
-		_, err = stmt.Exec(cols...)
-		failOnError(err, "Could add bulk insert")
-	}
-
-	_, err = stmt.Exec()
-	failOnError(err, "Could not exec the bulk copy")
-
-	err = stmt.Close()
-	failOnError(err, "Could not close")
-
-	err = txn.Commit()
-	failOnError(err, "Could not commit transaction")
 }
 
 func main() {
