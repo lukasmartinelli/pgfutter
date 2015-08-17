@@ -31,41 +31,74 @@ yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
 ## Import CSV
 
-We want to import a CSV file with a header row.
-`pgfutter` will automatically detect the delimiter and whether it has
-a header row or not. It will create a table and copy the data over to the
-PostgreSQL database.
+`pgfutter` is a great to take a quick look at Open Data sets in your favorite database.
 
-```
-pgfutter csv <csv-file>
-```
+Let's import all traffic violations of Montgomery, Alabama.
 
-Given the CSV.
-
-```
-name age friends
-Lukas 21 Alfred
-Alfred 25
+```bash
+wget -nc -O traffic_violations.csv https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv
 ```
 
-It will create the table
+Because header rows are already provided `pgfutter` will create the appropriate
+table and copy the rows.
 
-name   | age | friends
--------|-----|--------
-Lukas  | 21  | Alfred"
-Alfred | 21  |
-
-### More options
-
-You can also fully configure `pgfutter`.
-
-```
-pgfutter csv <csv-file> [--table people] [--skip-header-row] [--fields="id,name,birthday"] [--delimiter=" "] [--quote '"']
+```bash
+pgfutter csv traffic_violations.csv
 ```
 
-### JSON
+Database connection details are best provided via env vars.
 
-The JSON import expects lines of individual JSON objects.
+name        | default     | description
+------------|-------------|------------------------------
+`DB_NAME`   | `postgres`  | host name
+`DB_HOST`   | `localhost` | port
+`DB_PORT`   | `5432`      | username
+`DB_SCHEMA` | `import`    | schema to create tables for
+`DB_USER`   | `postgres`  | database user
+`DB_PASS`   |             | password (or empty if none)
+
+### Dealing with different CSV formats
+
+`pgfutter` will only deal with CSV files conforming to RFC 4180.
+
+Most often you want to specify a custom delimiter.
+
+```bash
+pgfutter csv -d "\t" traffic_violations.csv
+```
+
+### Custom header fields
+
+If you want to specify the field names explicitly you can
+skip the header row and pass a comma separated field name list.
+
+```bash
+pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
+```
+
+### Dealing with invalid input
+
+Sadly alot of CSV files don't confirm to proper CSV standards. If you want
+to ignore errors you can pass the `--ignore-errors` flags which will
+commit the transaction even if some rows cannot be imported.
+The failed rows will be written to stdout so you can clean them up with other tools.
+
+```bash
+pgfutter --ignore-errors csv traffic_violations.csv 2> traffic_violations_errors.csv
+```
+
+### Custom Table
+
+`pgfutter` will take the filename as the table name. If you want to specify a custom table name or a precreated table you can specify explicitely.
+
+```bash
+pgfutter csv --table violations traffic_violations.csv
+```
+
+## JSON
+
+Line based JSON files are more and more common.
+Each line should contain an individual JSON object.
 
 ```json
 {"name": "Lukas", "age": 21, "friends": ["Alfred"]}
@@ -79,13 +112,7 @@ json                                                |
 {"name": "Lukas", "age": 21, "friends": ["Alfred"]} |
 {"name": "Alfred", "age": 25, "friends": []}        |
 
-## Alternatives
-
-For more sophisticated needs you should use [pgloader](http://pgloader.io).
-
-# Advances Usage Examples
-
-## Flattening objects
+### Flattening objects
 
 This example is from my [repostruct](http://github.com/lukasmartinelli/repostruct)
 project, where I collect the filepaths of every GitHub repo.
@@ -136,6 +163,15 @@ CREATE TABLE import.repos (
     language_statistics TEXT
 )
 ```
+
+## Alternatives
+
+For more sophisticated needs you should use [pgloader](http://pgloader.io).
+
+## Advanced Use Cases
+
+You can follow through some more advanced use cases to learn
+how to best import data and clean it up.
 
 ## Regression Tests
 
