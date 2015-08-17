@@ -10,6 +10,25 @@ have to deal with when you just want to dump some data into the database.
 
 You can download a single binary for Linux, OSX or Windows.
 
+**OSX**
+
+```bash
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/pgfutter_darwin_amd64
+chmod +x pgfutter
+./pgfutter --help
+```
+
+**Linux**
+
+```bash
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/pgfutter_linux_amd64
+chmod +x pgfutter
+./pgfutter --help
+```
+
+If you are using Windows or 32-Bit architectures you need to [download the appropriate binary
+yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
+
 ## Import CSV
 
 We want to import a CSV file with a header row.
