@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -29,9 +28,11 @@ func parseColumns(c *cli.Context, reader *csv.Reader) []string {
 }
 
 func importCsv(c *cli.Context) {
+	cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
+
 	filename := c.Args().First()
 	if filename == "" {
-		fmt.Println("Please provide name of file to import")
+		cli.ShowCommandHelp(c, "csv")
 		os.Exit(1)
 	}
 

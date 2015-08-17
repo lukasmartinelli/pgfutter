@@ -77,6 +77,10 @@ func main() {
 					Name:  "flatten-graph, flatten",
 					Usage: "flatten fields into columns",
 				},
+				cli.StringFlag{
+					Name:  "from-array-field",
+					Usage: "parse array field of one JSON object",
+				},
 			},
 		},
 		{
