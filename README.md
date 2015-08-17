@@ -48,20 +48,6 @@ table and copy the rows.
 pgfutter csv traffic_violations.csv
 ```
 
-## Database Connection
-
-Database connection details can be provided via environment variables
-or as separate flags.
-
-name        | default     | description
-------------|-------------|------------------------------
-`DB_NAME`   | `postgres`  | host name
-`DB_HOST`   | `localhost` | port
-`DB_PORT`   | `5432`      | username
-`DB_SCHEMA` | `import`    | schema to create tables for
-`DB_USER`   | `postgres`  | database user
-`DB_PASS`   |             | password (or empty if none)
-
 ### Dealing with different CSV formats
 
 `pgfutter` will only deal with CSV files conforming to RFC 4180.
@@ -136,6 +122,20 @@ SELECT friend->'name', friend->'age'
 INTO public.friends
 FROM imported_friends
 ```
+
+## Database Connection
+
+Database connection details can be provided via environment variables
+or as separate flags.
+
+name        | default     | description
+------------|-------------|------------------------------
+`DB_NAME`   | `postgres`  | host name
+`DB_HOST`   | `localhost` | port
+`DB_PORT`   | `5432`      | username
+`DB_SCHEMA` | `import`    | schema to create tables for
+`DB_USER`   | `postgres`  | database user
+`DB_PASS`   |             | password (or empty if none)
 
 ## Alternatives
 
