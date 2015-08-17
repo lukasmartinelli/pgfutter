@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -40,48 +39,33 @@ func importJSON(c *cli.Context) {
 	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, columns...))
 	failOnError(err, "Could not prepare copy in statement")
 
-	if c.Bool("single-object") {
-		content, err := ioutil.ReadFile(filename)
-		failOnError(err, "Cannot read json file")
+	file, err := os.Open(filename)
+	failOnError(err, "Cannot open file")
+	defer file.Close()
 
-		var parsed interface{}
-		err = json.Unmarshal(content, &parsed)
-		failOnError(err, "Invalid JSON file")
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		var record map[string]interface{}
+		value := scanner.Text()
+		err := json.Unmarshal([]byte(value), &record)
 
-		row, err := json.Marshal(parsed)
-
-		_, err = stmt.Exec(string(row))
-		failOnError(err, "Could add bulk insert")
-	} else {
-
-		file, err := os.Open(filename)
-		failOnError(err, "Cannot open file")
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			var record map[string]interface{}
-			value := scanner.Text()
-			err := json.Unmarshal([]byte(value), &record)
-
-			if err != nil {
-				if c.GlobalBool("ignore-errors") {
-					os.Stderr.WriteString(value)
-				} else {
-					msg := fmt.Sprintf("Invalid JSON: %s", value)
-					log.Fatalln(msg)
-					panic(msg)
-				}
+		if err != nil {
+			if c.GlobalBool("ignore-errors") {
+				os.Stderr.WriteString(value)
 			} else {
-				row, err := json.Marshal(record)
-				failOnError(err, "Can not deserialize")
-
-				_, err = stmt.Exec(row)
-				failOnError(err, "Could add bulk insert")
+				msg := fmt.Sprintf("Invalid JSON: %s", value)
+				log.Fatalln(msg)
+				panic(msg)
 			}
+		} else {
+			row, err := json.Marshal(record)
+			failOnError(err, "Can not deserialize")
+
+			_, err = stmt.Exec(row)
+			failOnError(err, "Could add bulk insert")
 		}
-		failOnError(scanner.Err(), "Could not parse")
 	}
+	failOnError(scanner.Err(), "Could not parse")
 
 	_, err = stmt.Exec()
 	failOnError(err, "Could not exec the bulk copy")
