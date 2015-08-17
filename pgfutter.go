@@ -1,12 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/codegangsta/cli"
 )
@@ -16,31 +13,6 @@ func failOnError(err error, msg string) {
 		log.Fatalf("%s: %s", msg, err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
-}
-
-func createTableStatement(db *sql.DB, schema string, tableName string, columns []string) *sql.Stmt {
-	columnTypes := make([]string, len(columns))
-	for i, col := range columns {
-		columnTypes[i] = fmt.Sprintf("%s TEXT", col)
-	}
-	columnDefinitions := strings.Join(columnTypes, ",")
-	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
-	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions)
-
-	statement, err := db.Prepare(tableSchema)
-	failOnError(err, fmt.Sprintf("Could not create table schema %s", tableSchema))
-
-	return statement
-}
-
-func parseTableName(c *cli.Context, filename string) string {
-	tableName := c.GlobalString("table")
-	if tableName == "" {
-		base := filepath.Base(filename)
-		ext := filepath.Ext(filename)
-		tableName = strings.TrimSuffix(base, ext)
-	}
-	return postgresify(tableName)
 }
 
 func main() {
@@ -99,7 +71,7 @@ func main() {
 		{
 			Name:   "json",
 			Usage:  "Import JSON objects into database",
-			Action: ImportJson,
+			Action: importJSON,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "flatten-graph, flatten",

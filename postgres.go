@@ -46,7 +46,7 @@ func createConnStr(c *cli.Context) string {
 	)
 }
 
-func CreateTableStatement(db *sql.DB, schema string, tableName string, columns []string) *sql.Stmt {
+func createTableStatement(db *sql.DB, schema string, tableName string, columns []string) *sql.Stmt {
 	columnTypes := make([]string, len(columns))
 	for i, col := range columns {
 		columnTypes[i] = fmt.Sprintf("%s TEXT", col)
@@ -62,7 +62,7 @@ func CreateTableStatement(db *sql.DB, schema string, tableName string, columns [
 }
 
 //Parse table to copy to from given filename or passed flags
-func ParseTableName(c *cli.Context, filename string) string {
+func parseTableName(c *cli.Context, filename string) string {
 	tableName := c.GlobalString("table")
 	if tableName == "" {
 		base := filepath.Base(filename)
@@ -84,8 +84,8 @@ func postgresify(identifier string) string {
 	str = strings.Replace(str, "?", "", -1)
 	str = strings.Replace(str, "!", "", -1)
 
-	first_letter := string(str[0])
-	if _, err := strconv.Atoi(first_letter); err == nil {
+	firstLetter := string(str[0])
+	if _, err := strconv.Atoi(firstLetter); err == nil {
 		str = "_" + str
 	}
 

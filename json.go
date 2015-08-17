@@ -8,7 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-func ImportJson(c *cli.Context) {
+func importJSON(c *cli.Context) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		var record map[string]interface{}
