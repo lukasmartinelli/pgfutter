@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-	_ "github.com/jmoiron/sqlx/types"
 	"github.com/lib/pq"
 )
 

@@ -10,6 +10,16 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+//tries to create the schema and ignores failures to do so.
+//versions after Postgres 9.3 support the "IF NOT EXISTS" sql syntax
+func tryCreateSchema(db *sql.DB, importSchema string) {
+	createSchema, err := db.Prepare(fmt.Sprintf("CREATE SCHEMA %s", importSchema))
+
+	if err == nil {
+		createSchema.Exec()
+	}
+}
+
 //setup a database connection and create the import schema
 func connect(connStr string, importSchema string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", connStr)
@@ -22,20 +32,7 @@ func connect(connStr string, importSchema string) (*sql.DB, error) {
 		return db, err
 	}
 
-	if importSchema == "public" {
-		return db, nil
-	}
-
-	createSchema, err := db.Prepare(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", importSchema))
-	if err != nil {
-		return db, err
-	}
-
-	_, err = createSchema.Exec()
-	if err != nil {
-		return db, err
-	}
-
+	tryCreateSchema(db, importSchema)
 	return db, nil
 }
 

@@ -72,12 +72,6 @@ func main() {
 			Name:   "json",
 			Usage:  "Import JSON objects into database",
 			Action: importJSON,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "flatten-graph, flatten",
-					Usage: "flatten fields into columns",
-				},
-			},
 		},
 		{
 			Name:   "csv",
