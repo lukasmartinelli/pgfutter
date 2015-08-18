@@ -11,6 +11,7 @@ cache:
 install:
   - go get github.com/codegangsta/cli
   - go get github.com/lib/pq
+  - go get github.com/kennygrant/sanitize
   - ./download_samples.sh
 script:
   - go install && ./test.sh

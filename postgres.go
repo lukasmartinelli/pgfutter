@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
+	"github.com/kennygrant/sanitize"
 )
 
 //tries to create the schema and ignores failures to do so.
@@ -50,28 +51,28 @@ func parseTableName(c *cli.Context, filename string) string {
 
 //Makes sure that a string is a valid PostgreSQL identifier
 func postgresify(identifier string) string {
-	str := strings.ToLower(identifier)
+	str := sanitize.Accents(identifier)
+	str = strings.ToLower(identifier)
 	str = strings.TrimSpace(str)
-	str = strings.Replace(str, " ", "_", -1)
-	str = strings.Replace(str, "/", "_", -1)
-	str = strings.Replace(str, ".", "_", -1)
-	str = strings.Replace(str, ":", "_", -1)
-	str = strings.Replace(str, ";", "_", -1)
-	str = strings.Replace(str, "-", "_", -1)
-	str = strings.Replace(str, ",", "_", -1)
-	str = strings.Replace(str, "?", "", -1)
-	str = strings.Replace(str, "!", "", -1)
-	str = strings.Replace(str, "$", "", -1)
-	str = strings.Replace(str, "%", "", -1)
 
-	str = strings.Replace(str, "é", "e", -1)
-	str = strings.Replace(str, "ê", "e", -1)
-	str = strings.Replace(str, "è", "e", -1)
-	str = strings.Replace(str, "ü", "u", -1)
-	str = strings.Replace(str, "ä", "a", -1)
-	str = strings.Replace(str, "à", "a", -1)
-	str = strings.Replace(str, "ö", "o", -1)
-	str = strings.Replace(str, "ô", "o", -1)
+	replacements := map[string]string{
+		" ": "_",
+		"/": "_",
+		".": "_",
+		":": "_",
+		";": "_",
+		"|": "_",
+		"-": "_",
+		",": "_",
+
+		"?": "",
+		"!": "",
+		"$": "",
+		"%": "",
+	}
+	for oldString, newString := range replacements {
+		str = strings.Replace(str, oldString, newString, -1)
+	}
 
 	if len(str) == 0 {
 		str = fmt.Sprintf("_col%d", rand.Intn(10000))
