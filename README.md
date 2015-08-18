@@ -34,7 +34,7 @@ yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
 ## Import CSV
 
-`pgfutter` will deal with CSV files conforming to RFC 4180.
+`pgfutter` will deal with CSV files conforming to [RFC 4180](https://tools.ietf.org/html/rfc4180#section-2).
 
 Create `friends.csv`.
 
@@ -85,7 +85,7 @@ FROM import.friends
 ## Import JSON
 
 A lot of event logs contain JSON objects nowadays (e.g. [GitHub Archive](https://www.githubarchive.org/)).
-`pgfutter` expects each line to have a valid JSON object.
+`pgfutter` expects each line to have a valid JSON object. Importing JSON is only supported for Postgres 9.4 due to the new `JSONB` type.
 
 Create `friends.json`.
 
@@ -101,7 +101,7 @@ Import the JSON file.
 pgfutter json friends.json
 ```
 
-Your JSON objects will be stored in a single `JSONB` column called `data`.
+Your JSON objects will be stored in a single [JSONB](http://www.postgresql.org/docs/9.4/static/datatype-json.html) column called `data`.
 
 data                                                          |
 --------------------------------------------------------------|

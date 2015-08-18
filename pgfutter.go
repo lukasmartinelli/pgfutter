@@ -91,6 +91,10 @@ func main() {
 					Value: ",",
 					Usage: "field delimiter",
 				},
+				cli.BoolFlag{
+					Name:  "trailing-comma",
+					Usage: "extra delimiter at end of line",
+				},
 			},
 		},
 	}

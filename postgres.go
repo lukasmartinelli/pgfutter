@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -50,18 +51,35 @@ func parseTableName(c *cli.Context, filename string) string {
 //Makes sure that a string is a valid PostgreSQL identifier
 func postgresify(identifier string) string {
 	str := strings.ToLower(identifier)
+	str = strings.TrimSpace(str)
 	str = strings.Replace(str, " ", "_", -1)
 	str = strings.Replace(str, "/", "_", -1)
 	str = strings.Replace(str, ".", "_", -1)
 	str = strings.Replace(str, ":", "_", -1)
+	str = strings.Replace(str, ";", "_", -1)
 	str = strings.Replace(str, "-", "_", -1)
 	str = strings.Replace(str, ",", "_", -1)
 	str = strings.Replace(str, "?", "", -1)
 	str = strings.Replace(str, "!", "", -1)
+	str = strings.Replace(str, "$", "", -1)
+	str = strings.Replace(str, "%", "", -1)
 
-	firstLetter := string(str[0])
-	if _, err := strconv.Atoi(firstLetter); err == nil {
-		str = "_" + str
+	str = strings.Replace(str, "é", "e", -1)
+	str = strings.Replace(str, "ê", "e", -1)
+	str = strings.Replace(str, "è", "e", -1)
+	str = strings.Replace(str, "ü", "u", -1)
+	str = strings.Replace(str, "ä", "a", -1)
+	str = strings.Replace(str, "à", "a", -1)
+	str = strings.Replace(str, "ö", "o", -1)
+	str = strings.Replace(str, "ô", "o", -1)
+
+	if len(str) == 0 {
+		str = fmt.Sprintf("_col%d", rand.Intn(10000))
+	} else {
+		firstLetter := string(str[0])
+		if _, err := strconv.Atoi(firstLetter); err == nil {
+			str = "_" + str
+		}
 	}
 
 	return str

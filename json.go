@@ -36,10 +36,10 @@ func importJSON(c *cli.Context) {
 	defer db.Close()
 
 	columns := []string{"data"}
-	createTable, err := createJSONTable(db, schema, tableName, columns[0])
+	table, err := createJSONTable(db, schema, tableName, columns[0])
 	failOnError(err, "Could not create table statement")
 
-	_, err = createTable.Exec()
+	_, err = table.Exec()
 	failOnError(err, "Could not create table")
 
 	txn, err := db.Begin()

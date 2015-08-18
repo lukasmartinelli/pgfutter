@@ -50,14 +50,15 @@ func importCsv(c *cli.Context) {
 	reader := csv.NewReader(file)
 	reader.Comma = rune(c.String("delimiter")[0])
 	reader.LazyQuotes = true
+	reader.TrailingComma = c.Bool("trailing-comma")
 
 	columns := parseColumns(c, reader)
 	reader.FieldsPerRecord = len(columns)
 
-	createTable, err := createTable(db, schema, tableName, columns)
+	table, err := createTable(db, schema, tableName, columns)
 	failOnError(err, "Could not create table statement")
 
-	_, err = createTable.Exec()
+	_, err = table.Exec()
 	failOnError(err, "Could not create table")
 
 	txn, err := db.Begin()

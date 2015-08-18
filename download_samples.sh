@@ -5,7 +5,8 @@ SAMPLES_DIR="$CWD/samples"
 function download_json_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
-    wget -nc -O employee_salaries.json https://data.montgomerycountymd.gov/api/views/54rh-89p8/rows.json
+    wget -nc http://data.githubarchive.org/2015-01-01-15.json.gz && gunzip -f 2015-01-01-15.json.gz
+    wget -nc https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-1.json.tar.gz && tar -xvzf filepaths-1.json.tar.gz
     cd $CWD
 }
 
