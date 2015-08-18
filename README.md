@@ -35,23 +35,57 @@ yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
 ## Import CSV
 
-Let's import all traffic violations of Montgomery, Alabama.
+`pgfutter` will deal with CSV files conforming to RFC 4180.
+
+**Example: friends.csv**
+
+```json
+name,age,friends
+Jacob,26,"Anthony"
+Anthony,25,""
+Emma,28,"Jacob,Anthony"
+```
+
+Import the CSV file.
 
 ```bash
-wget -nc -O traffic_violations.csv https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv
+pgfutter csv friends.csv
 ```
 
 Because header rows are already provided `pgfutter` will create the appropriate
 table and copy the rows.
 
-```bash
-pgfutter csv traffic_violations.csv
+name    | age| friends         |
+--------|----|-----------------|
+Jacob   | 26 | Anthony         |
+Anthony | 25 |                 |
+Emma    | 28 | Jacob,Anthony   |
+
+Now you can start normalizing the data (it's not perfect in this example).
+
+```sql
+CREATE TABLE public.person (
+    name VARCHAR(200) PRIMARY KEY,
+    age INTEGER
+)
+
+CREATE TABLE public.friendship (
+    person VARCHAR(200) REFERENCES public.person(name),
+    friend VARCHAR(200) REFERENCES public.person(name)
+)
+
+INSERT INTO public.person
+SELECT name, age
+FROM import.friends
+
+INSERT INTO public.friendship
+SELECT name as person, regexp_split_to_table(friends, E'\\,') as friend
+FROM import.friends
 ```
 
 ### Dealing with different CSV formats
 
-`pgfutter` will only deal with CSV files conforming to RFC 4180.
-Most often you want to specify a custom delimiter (default: `,`).
+Quite often you want to specify a custom delimiter (default: `,`).
 
 ```bash
 pgfutter csv -d "\t" traffic_violations.csv
@@ -102,57 +136,46 @@ A lot of event logs contain JSON objects nowadays (e.g. [GitHub Archive](https:/
 **Example: friends.json**
 
 ```json
-{"name": "Guido", "age": 21, "friends": ["Linus"]}
-{"name": "Linus", "age": 25, "friends": []}
+{"name": "Jacob", "age": 26, "friends": ["Anthony"]}
+{"name": "Anthony", "age": 25, "friends": []}
+{"name": "Emma", "age": 28, "friends": ["Jacob", "Anthony"]}
 ```
 
-Importing such files is straightforward.
+Import the JSON file.
 
-```
+```bash
 pgfutter json friends.json
 ```
 
-Per default your JSON objects will be stored in a single `JSONB` column called `data`.
+Your JSON objects will be stored in a single `JSONB` column called `data`.
 
-data                                                  |
-------------------------------------------------------|
-`{"name": "Guido", "age": 21, "friends": ["Linus"]}`  |
-`{"name": "Linus", "age": 25, "friends": []}`         |
+data                                                          |
+--------------------------------------------------------------|
+`{"name": "Jacob", "age": 26, "friends": ["Anthony"]}`        |
+`{"name": "Anthony", "age": 25, "friends": []}`               |
+`{"name": "Emma", "age": 28, "friends": ["Jacob", "Anthony"]}`|
 
 [PostgreSQL has excellent JSON support](http://www.postgresql.org/docs/9.3/static/functions-json.html) which means you can then start
 normalizing your data.
 
 ```sql
 CREATE TABLE public.person (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(200),
+    name VARCHAR(200) PRIMARY KEY,
     age INTEGER
 )
 
-SELECT data->'name', data->'age'
-INTO public.person
-FROM import.friends
-
-CREATE TABLE public.friend (
-    person INTEGER
-    friend INTEGER
-    FOREIGN KEY(person) REFERENCES public.person(id)
-    FOREIGN KEY(friend) REFERENCES public.person(id)
+CREATE TABLE public.friendship (
+    person VARCHAR(200) REFERENCES public.person(name),
+    friend VARCHAR(200) REFERENCES public.person(name)
 )
 
-SELECT data->'name' as name, data->'age' as age
-INTO public.friends
+INSERT INTO public.person
+SELECT data->>'name' as name, (data->>'age')::int as age
 FROM import.friends
 
-WITH friend_relationships AS (
-    SELECT data->'name' as name, json_array_elements(data->'friends')
-    FROM import.friends
-)
-SELECT
-(SELECT id FROM public.person WHERE name=fr.name) as person,
-(SELECT id FROM public.person WHERE name=fr.name) as friend
-FROM friend_relationships as fr
-INTO public.friends
+INSERT INTO public.friendship
+SELECT data->>'name' as person, jsonb_array_elements_text(data->'friends')
+FROM import.friends
 ```
 
 ## Database Connection
