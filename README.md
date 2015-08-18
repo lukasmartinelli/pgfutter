@@ -85,7 +85,7 @@ FROM import.friends
 ## Import JSON
 
 A lot of event logs contain JSON objects nowadays (e.g. [GitHub Archive](https://www.githubarchive.org/)).
-`pgfutter` expects each line to have a valid JSON object. Importing JSON is only supported for Postgres 9.4 due to the new `JSONB` type.
+`pgfutter` expects each line to have a valid JSON object. Importing JSON is only supported for Postgres 9.3 and Postgres 9.4 due to the `JSON` type.
 
 Create `friends.json`.
 
@@ -101,7 +101,7 @@ Import the JSON file.
 pgfutter json friends.json
 ```
 
-Your JSON objects will be stored in a single [JSONB](http://www.postgresql.org/docs/9.4/static/datatype-json.html) column called `data`.
+Your JSON objects will be stored in a single [JSON](http://www.postgresql.org/docs/9.4/static/datatype-json.html) column called `data`.
 
 data                                                          |
 --------------------------------------------------------------|
@@ -128,7 +128,7 @@ SELECT data->>'name' as name, (data->>'age')::int as age
 FROM import.friends
 
 INSERT INTO public.friendship
-SELECT data->>'name' as person, jsonb_array_elements_text(data->'friends')
+SELECT data->>'name' as person, json_array_elements_text(data->'friends')
 FROM import.friends
 ```
 
