@@ -32,5 +32,5 @@ function download_csv_samples() {
     cd $CWD
 }
 
-download_json_samples
 download_csv_samples
+download_json_samples

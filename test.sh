@@ -76,6 +76,6 @@ import_and_test_csv "distribution_of_wealth_switzerland" "$SAMPLES_DIR/distribut
 import_and_test_csv "customer_complaints" "$SAMPLES_DIR/customer_complaints.csv"
 import_and_test_csv "whitehouse_visits_2014" "$SAMPLES_DIR/whitehouse_visits_2014.csv"
 import_and_test_csv "traffic_violations" "$SAMPLES_DIR/traffic_violations.csv"
-import_and_test_json "filepaths_1" "$SAMPLES_DIR/filepaths-1.json"
 import_and_test_csv "metadatenbank_vernehmlassungen_ogd_v1_3" "$SAMPLES_DIR/Metadatenbank-Vernehmlassungen-OGD-V1-3.csv"
 import_and_test_csv "wealth_groups" "$SAMPLES_DIR/Wealth_groups.csv"
+import_and_test_json "filepaths_1" "$SAMPLES_DIR/filepaths-1.json"

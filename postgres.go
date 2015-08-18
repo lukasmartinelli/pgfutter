@@ -51,7 +51,7 @@ func parseTableName(c *cli.Context, filename string) string {
 
 //Makes sure that a string is a valid PostgreSQL identifier
 func postgresify(identifier string) string {
-	str := sanitize.Accents(identifier)
+	str := sanitize.BaseName(identifier)
 	str = strings.ToLower(identifier)
 	str = strings.TrimSpace(str)
 
