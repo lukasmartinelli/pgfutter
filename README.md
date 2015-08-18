@@ -7,8 +7,7 @@ This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
 `pgfutter` will only help you to get the data into the database. After that
-you should sanitize and normalize the data according to your desired
-database schema.
+SQL is a great language to sanitize and normalize the data according to your desired database schema.
 
 ## Install
 
