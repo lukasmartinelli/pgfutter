@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cheggaaa/pb"
 	"github.com/codegangsta/cli"
 	"github.com/lib/pq"
 )
@@ -47,6 +48,17 @@ func importCsv(c *cli.Context) {
 	failOnError(err, "Cannot open file")
 	defer file.Close()
 
+	//Is it really smart to read the whole file just to provide statistics?
+	lines, err := lineCounter(file)
+	failOnError(err, "Cannot count lines")
+	file.Seek(0, 0)
+	if !c.Bool("skip-header") {
+		lines -= 1
+	}
+
+	bar := pb.New(lines)
+	bar.Start()
+
 	reader := csv.NewReader(file)
 	reader.Comma = rune(c.String("delimiter")[0])
 	reader.LazyQuotes = true
@@ -79,6 +91,7 @@ func importCsv(c *cli.Context) {
 		}
 		failOnError(err, "Could not read csv")
 		_, err = stmt.Exec(cols...)
+		bar.Increment()
 		failOnError(err, "Could add bulk insert")
 	}
 
@@ -90,4 +103,6 @@ func importCsv(c *cli.Context) {
 
 	err = txn.Commit()
 	failOnError(err, "Could not commit transaction")
+
+	bar.Finish()
 }

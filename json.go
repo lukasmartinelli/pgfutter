@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,9 +10,31 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cheggaaa/pb"
 	"github.com/codegangsta/cli"
 	"github.com/lib/pq"
 )
+
+func lineCounter(r io.Reader) (int, error) {
+	buf := make([]byte, 8196)
+	count := 0
+	lineSep := []byte{'\n'}
+
+	for {
+		c, err := r.Read(buf)
+		if err != nil && err != io.EOF {
+			return count, err
+		}
+
+		count += bytes.Count(buf[:c], lineSep)
+
+		if err == io.EOF {
+			break
+		}
+	}
+
+	return count, nil
+}
 
 func isValidJSON(b []byte) bool {
 	var v interface{}
@@ -52,9 +75,18 @@ func importJSON(c *cli.Context) {
 	failOnError(err, "Cannot open file")
 	defer file.Close()
 
+	//Is it really smart to read the whole file just to provide statistics?
+	lines, err := lineCounter(file)
+	failOnError(err, "Cannot count lines")
+	file.Seek(0, 0)
+
+	bar := pb.New(lines)
+	bar.Start()
+
 	reader := bufio.NewReader(file)
 	for {
 		line, err := reader.ReadBytes('\n')
+		bar.Increment()
 
 		if err == io.EOF {
 			err = nil
@@ -92,4 +124,6 @@ func importJSON(c *cli.Context) {
 
 	err = txn.Commit()
 	failOnError(err, "Could not commit transaction")
+
+	bar.Finish()
 }

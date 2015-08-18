@@ -12,6 +12,7 @@ install:
   - go get github.com/codegangsta/cli
   - go get github.com/lib/pq
   - go get github.com/kennygrant/sanitize
+  - go get github.com/cheggaaa/pb
   - ./download_samples.sh
 script:
   - go install && ./test.sh
