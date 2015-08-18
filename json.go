@@ -24,12 +24,14 @@ func importJSON(c *cli.Context) {
 	schema := c.GlobalString("schema")
 	tableName := parseTableName(c, filename)
 
-	db, err := connect(createConnStr(c), schema)
+	db, err := connect(parseConnStr(c), schema)
 	failOnError(err, "Could not connect to db")
 	defer db.Close()
 
-	columns := []string{"json"}
-	createTable := createTableStatement(db, schema, tableName, columns)
+	columns := []string{"data"}
+	createTable, err := createJSONTable(db, schema, tableName, columns[0])
+	failOnError(err, "Could not create table statement")
+
 	_, err = createTable.Exec()
 	failOnError(err, "Could not create table")
 

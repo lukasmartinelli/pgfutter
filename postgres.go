@@ -10,6 +10,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+//setup a database connection and create the import schema
 func connect(connStr string, importSchema string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -19,6 +20,10 @@ func connect(connStr string, importSchema string) (*sql.DB, error) {
 	err = db.Ping()
 	if err != nil {
 		return db, err
+	}
+
+	if importSchema == "public" {
+		return db, nil
 	}
 
 	createSchema, err := db.Prepare(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", importSchema))
@@ -32,33 +37,6 @@ func connect(connStr string, importSchema string) (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func createConnStr(c *cli.Context) string {
-	otherParams := "sslmode=disable connect_timeout=5"
-	return fmt.Sprintf("user=%s dbname=%s password='%s' host=%s port=%s %s",
-		c.GlobalString("username"),
-		c.GlobalString("dbname"),
-		c.GlobalString("pass"),
-		c.GlobalString("host"),
-		c.GlobalString("port"),
-		otherParams,
-	)
-}
-
-func createTableStatement(db *sql.DB, schema string, tableName string, columns []string) *sql.Stmt {
-	columnTypes := make([]string, len(columns))
-	for i, col := range columns {
-		columnTypes[i] = fmt.Sprintf("%s TEXT", col)
-	}
-	columnDefinitions := strings.Join(columnTypes, ",")
-	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
-	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions)
-
-	statement, err := db.Prepare(tableSchema)
-	failOnError(err, fmt.Sprintf("Could not create table schema %s", tableSchema))
-
-	return statement
 }
 
 //Parse table to copy to from given filename or passed flags
@@ -90,4 +68,48 @@ func postgresify(identifier string) string {
 	}
 
 	return str
+}
+
+//parse sql connection string from cli flags
+func parseConnStr(c *cli.Context) string {
+	otherParams := "sslmode=disable connect_timeout=5"
+	return fmt.Sprintf("user=%s dbname=%s password='%s' host=%s port=%s %s",
+		c.GlobalString("username"),
+		c.GlobalString("dbname"),
+		c.GlobalString("pass"),
+		c.GlobalString("host"),
+		c.GlobalString("port"),
+		otherParams,
+	)
+}
+
+//create table with a single JSONB column data
+func createJSONTable(db *sql.DB, schema string, tableName string, column string) (*sql.Stmt, error) {
+	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
+	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s JSONB)", fullyQualifiedTable, column)
+
+	statement, err := db.Prepare(tableSchema)
+	if err == nil {
+		return statement, err
+	}
+
+	return statement, nil
+}
+
+//create table with TEXT columns
+func createTable(db *sql.DB, schema string, tableName string, columns []string) (*sql.Stmt, error) {
+	columnTypes := make([]string, len(columns))
+	for i, col := range columns {
+		columnTypes[i] = fmt.Sprintf("%s TEXT", col)
+	}
+	columnDefinitions := strings.Join(columnTypes, ",")
+	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
+	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions)
+
+	statement, err := db.Prepare(tableSchema)
+	if err == nil {
+		return statement, err
+	}
+
+	return statement, nil
 }

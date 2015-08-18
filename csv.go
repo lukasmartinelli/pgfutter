@@ -39,7 +39,7 @@ func importCsv(c *cli.Context) {
 	schema := c.GlobalString("schema")
 	tableName := parseTableName(c, filename)
 
-	db, err := connect(createConnStr(c), schema)
+	db, err := connect(parseConnStr(c), schema)
 	failOnError(err, "Could not connect to db")
 	defer db.Close()
 
@@ -54,7 +54,9 @@ func importCsv(c *cli.Context) {
 	columns := parseColumns(c, reader)
 	reader.FieldsPerRecord = len(columns)
 
-	createTable := createTableStatement(db, schema, tableName, columns)
+	createTable, err := createTable(db, schema, tableName, columns)
+	failOnError(err, "Could not create table statement")
+
 	_, err = createTable.Exec()
 	failOnError(err, "Could not create table")
 
