@@ -83,26 +83,6 @@ SELECT name as person, regexp_split_to_table(friends, E'\\,') as friend
 FROM import.friends
 ```
 
-### Dealing with different CSV formats
-
-Quite often you want to specify a custom delimiter (default: `,`).
-
-```bash
-pgfutter csv -d "\t" traffic_violations.csv
-```
-
-You have to use `"` as a quoting character and `\` as escape character.
-You might omit the quoting character if it is not necessary.
-
-### Custom header fields
-
-If you want to specify the field names explicitly you can
-skip the header row and pass a comma separated field name list.
-
-```bash
-pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
-```
-
 ## Import JSON
 
 A lot of event logs contain JSON objects nowadays (e.g. [GitHub Archive](https://www.githubarchive.org/)).
@@ -167,7 +147,27 @@ name        | default     | description
 `DB_USER`   | `postgres`  | database user
 `DB_PASS`   |             | password (or empty if none)
 
-## Advances Use Cases
+## Advanced Use Cases
+
+### Custom delimiter
+
+Quite often you want to specify a custom delimiter (default: `,`).
+
+```bash
+pgfutter csv -d "\t" traffic_violations.csv
+```
+
+You have to use `"` as a quoting character and `\` as escape character.
+You might omit the quoting character if it is not necessary.
+
+### Custom header fields
+
+If you want to specify the field names explicitly you can
+skip the header row and pass a comma separated field name list.
+
+```bash
+pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
+```
 
 ### Encoding
 
