@@ -37,9 +37,9 @@ yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
 `pgfutter` will deal with CSV files conforming to RFC 4180.
 
-**Example: friends.csv**
+Create `friends.csv`.
 
-```json
+```csv
 name,age,friends
 Jacob,26,"Anthony"
 Anthony,25,""
@@ -103,37 +103,12 @@ skip the header row and pass a comma separated field name list.
 pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
 ```
 
-### Encoding
-
-All CSV files need to be `utf-8` encoded. No other encoding is supported.
-Encoding is a nasty topic and you should deal with it before it enters
-the database.
-
-### Dealing with invalid input
-
-A lot of CSV files don't confirm to proper CSV standards. If you want
-to ignore errors you can pass the `--ignore-errors` flag which will
-commit the transaction even if some rows cannot be imported.
-The failed rows will be written to stdout so you can clean them up with other tools.
-
-```bash
-pgfutter --ignore-errors csv traffic_violations.csv 2> traffic_violations_errors.csv
-```
-
-### Custom Table
-
-`pgfutter` will take the sanitized filename as the table name. If you want to specify a custom table name or import into your predefined table schema you can specify the table explicitly.
-
-```bash
-pgfutter csv --table violations traffic_violations.csv
-```
-
 ## Import JSON
 
 A lot of event logs contain JSON objects nowadays (e.g. [GitHub Archive](https://www.githubarchive.org/)).
 `pgfutter` expects each line to have a valid JSON object.
 
-**Example: friends.json**
+Create `friends.json`.
 
 ```json
 {"name": "Jacob", "age": 26, "friends": ["Anthony"]}
@@ -191,6 +166,35 @@ name        | default     | description
 `DB_SCHEMA` | `import`    | schema to create tables for
 `DB_USER`   | `postgres`  | database user
 `DB_PASS`   |             | password (or empty if none)
+
+## Advances Use Cases
+
+### Encoding
+
+All CSV files need to be `utf-8` encoded. No other encoding is supported.
+Encoding is a nasty topic and you should deal with it before it enters
+the database.
+
+### Dealing with invalid input
+
+A lot of CSV files don't confirm to proper CSV standards. If you want
+to ignore errors you can pass the `--ignore-errors` flag which will
+commit the transaction even if some rows cannot be imported.
+The failed rows will be written to stdout so you can clean them up with other tools.
+
+```bash
+pgfutter --ignore-errors csv traffic_violations.csv 2> traffic_violations_errors.csv
+```
+
+This works the same for invalid JSON objects.
+
+### Custom Table
+
+`pgfutter` will take the sanitized filename as the table name. If you want to specify a custom table name or import into your predefined table schema you can specify the table explicitly.
+
+```bash
+pgfutter csv --table violations traffic_violations.csv
+```
 
 ## Alternatives
 
