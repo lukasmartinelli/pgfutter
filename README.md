@@ -96,31 +96,63 @@ pgfutter csv --table violations traffic_violations.csv
 
 ## Import JSON
 
-Line based JSON files are more and more common.
-Each line should contain an individual JSON object.
+A lot of event logs contain JSON objects nowadays (e.g. [GitHub Archive](https://www.githubarchive.org/)).
+`pgfutter` expects each line to have a valid JSON object.
+
+**Example: friends.json**
 
 ```json
-{"name": "Lukas", "age": 21, "friends": ["Alfred"]}
-{"name": "Alfred", "age": 25, "friends": []}
+{"name": "Guido", "age": 21, "friends": ["Linus"]}
+{"name": "Linus", "age": 25, "friends": []}
 ```
 
-Per default your JSON objects will be stored in a single plain-text column.
+Importing such files is straightforward.
 
-json                                                  |
+```
+pgfutter json friends.json
+```
+
+Per default your JSON objects will be stored in a single `JSONB` column called `data`.
+
+data                                                  |
 ------------------------------------------------------|
-`{"name": "Lukas", "age": 21, "friends": ["Alfred"]}` |
-`{"name": "Alfred", "age": 25, "friends": []}`        |
+`{"name": "Guido", "age": 21, "friends": ["Linus"]}`  |
+`{"name": "Linus", "age": 25, "friends": []}`         |
 
 [PostgreSQL has excellent JSON support](http://www.postgresql.org/docs/9.3/static/functions-json.html) which means you can then start
 normalizing your data.
 
 ```sql
-WITH imported_friends AS (
-    SELECT to_json(json) as friend FROM import.friends
+CREATE TABLE public.person (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200),
+    age INTEGER
 )
-SELECT friend->'name', friend->'age'
+
+SELECT data->'name', data->'age'
+INTO public.person
+FROM import.friends
+
+CREATE TABLE public.friend (
+    person INTEGER
+    friend INTEGER
+    FOREIGN KEY(person) REFERENCES public.person(id)
+    FOREIGN KEY(friend) REFERENCES public.person(id)
+)
+
+SELECT data->'name' as name, data->'age' as age
 INTO public.friends
-FROM imported_friends
+FROM import.friends
+
+WITH friend_relationships AS (
+    SELECT data->'name' as name, json_array_elements(data->'friends')
+    FROM import.friends
+)
+SELECT
+(SELECT id FROM public.person WHERE name=fr.name) as person,
+(SELECT id FROM public.person WHERE name=fr.name) as friend
+FROM friend_relationships as fr
+INTO public.friends
 ```
 
 ## Database Connection
