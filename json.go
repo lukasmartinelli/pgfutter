@@ -4,13 +4,21 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/codegangsta/cli"
+	_ "github.com/jmoiron/sqlx/types"
 	"github.com/lib/pq"
 )
+
+func isValidJSON(b []byte) bool {
+	var v interface{}
+	err := json.Unmarshal(b, &v)
+	return err == nil
+}
 
 func importJSON(c *cli.Context) {
 	cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
@@ -45,29 +53,37 @@ func importJSON(c *cli.Context) {
 	failOnError(err, "Cannot open file")
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		var record map[string]interface{}
-		value := scanner.Text()
-		err := json.Unmarshal([]byte(value), &record)
+	reader := bufio.NewReader(file)
+	for {
+		line, err := reader.ReadBytes('\n')
 
-		if err != nil {
+		if err == io.EOF {
+			err = nil
+			break
+		}
+		failOnError(err, "Could not read line")
+
+		handleError := func() {
 			if c.GlobalBool("ignore-errors") {
-				os.Stderr.WriteString(value)
+				os.Stderr.WriteString(string(line))
 			} else {
-				msg := fmt.Sprintf("Invalid JSON: %s", value)
+				msg := fmt.Sprintf("Invalid JSON %s: %s", err, line)
 				log.Fatalln(msg)
 				panic(msg)
 			}
-		} else {
-			row, err := json.Marshal(record)
-			failOnError(err, "Can not deserialize")
-
-			_, err = stmt.Exec(row)
-			failOnError(err, "Could add bulk insert")
 		}
+
+		if !isValidJSON(line) {
+			handleError()
+		}
+
+		_, err = stmt.Exec(string(line))
+		if err != nil {
+			handleError()
+		}
+
+		failOnError(err, "Could add bulk insert")
 	}
-	failOnError(scanner.Err(), "Could not parse")
 
 	_, err = stmt.Exec()
 	failOnError(err, "Could not exec the bulk copy")
