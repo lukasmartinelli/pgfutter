@@ -93,7 +93,7 @@ func importJSON(filename string, connStr string, schema string, tableName string
 	bar.Finish()
 
 	if err != nil {
-		lineNumber := success + failed + 1
+		lineNumber := success + failed
 		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
 	} else {
 		fmt.Println(fmt.Sprintf("%d rows have successfully been copied into %s.%s", success, schema, tableName))

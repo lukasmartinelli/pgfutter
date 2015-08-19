@@ -2,21 +2,21 @@ package main
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/codegangsta/cli"
+	"unicode/utf8"
 )
 
 // Parse columns from first header row or from flags
-func parseColumns(c *cli.Context, reader *csv.Reader) []string {
+func parseColumns(reader *csv.Reader, skipHeader bool, fields string) []string {
 	var err error
 	var columns []string
-	if c.Bool("skip-header") {
-		columns = strings.Split(c.String("fields"), ",")
+	if skipHeader {
+		columns = strings.Split(fields, ",")
 	} else {
 		columns, err = reader.Read()
 		failOnError(err, "Could not read header row")
@@ -29,24 +29,18 @@ func parseColumns(c *cli.Context, reader *csv.Reader) []string {
 	return columns
 }
 
-func importCsv(c *cli.Context) {
-	cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
-
-	filename := c.Args().First()
-	if filename == "" {
-		cli.ShowCommandHelp(c, "csv")
-		os.Exit(1)
-	}
-
-	schema := c.GlobalString("schema")
-	tableName := parseTableName(c, filename)
+func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string) error {
 
 	file, err := os.Open(filename)
-	failOnError(err, "Cannot open file")
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
-	db, err := connect(parseConnStr(c), schema)
-	failOnError(err, "Could not connect to db")
+	db, err := connect(connStr, schema)
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	success := 0
@@ -55,15 +49,16 @@ func importCsv(c *cli.Context) {
 	bar.Start()
 
 	reader := csv.NewReader(io.TeeReader(file, bar))
-	reader.Comma = rune(c.String("delimiter")[0])
+	reader.Comma, _ = utf8.DecodeRuneInString(delimiter)
 	reader.LazyQuotes = true
-	reader.TrailingComma = c.Bool("trailing-comma")
 
-	columns := parseColumns(c, reader)
+	columns := parseColumns(reader, skipHeader, fields)
 	reader.FieldsPerRecord = len(columns)
 
 	i, err := NewCSVImport(db, schema, tableName, columns)
-	failOnError(err, "Could not prepare import")
+	if err != nil {
+		return err
+	}
 
 	for {
 		cols := make([]interface{}, len(columns))
@@ -79,15 +74,27 @@ func importCsv(c *cli.Context) {
 			break
 		}
 
-		//Todo: better error handling
-		failOnError(err, "Could not read csv")
-
-		err = i.AddRow(cols...)
 		if err != nil {
 			failed++
-			line := strings.Join(record, c.GlobalString("delimiter"))
+			line := strings.Join(record, delimiter)
 
-			if c.GlobalBool("ignore-errors") {
+			if ignoreErrors {
+				os.Stderr.WriteString(line)
+			} else {
+				msg := fmt.Sprintf("Could not parse %s: %s", err, line)
+				break
+			}
+		} else {
+			success++
+		}
+
+		err = i.AddRow(cols...)
+
+		if err != nil {
+			failed++
+			line := strings.Join(record, delimiter)
+
+			if ignoreErrors {
 				os.Stderr.WriteString(line)
 			} else {
 				msg := fmt.Sprintf("Could not import %s: %s", err, line)
@@ -99,21 +106,22 @@ func importCsv(c *cli.Context) {
 		}
 	}
 
-	err = i.Commit()
-	failOnError(err, "Could not commit")
 	bar.Finish()
 
-	//refactore whole reporting stuff
-	//print report
-	fmt.Println(fmt.Sprintf("Successfully copied %d rows into %s"))
-
-	if c.GlobalBool("ignore-errors") {
-		fmt.Println(fmt.Sprintf("%d rows could not be imported into %s and have been written to stderr."))
+	if err != nil {
+		i.Rollback()
+		lineNumber := success + failed
+		if !skipHeader {
+			lineNumber++
+		}
+		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
 	} else {
-		fmt.Println(fmt.Sprintf("%d rows could not be imported into %s."))
-	}
+		fmt.Println(fmt.Sprintf("%d rows have successfully been copied into %s.%s", success, schema, tableName))
 
-	if failed > 0 && c.GlobalBool("ignore-errors") {
-		fmt.Println("You can specify the --ignore-errors flag to write errors to stderr, instead of aborting the transcation.")
+		if ignoreErrors && failed > 0 {
+			fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
+		}
+
+		return i.Commit()
 	}
 }

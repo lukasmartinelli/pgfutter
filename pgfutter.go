@@ -110,9 +110,8 @@ func main() {
 			},
 		},
 		{
-			Name:   "csv",
-			Usage:  "Import CSV into database",
-			Action: importCsv,
+			Name:  "csv",
+			Usage: "Import CSV into database",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "skip-header",
@@ -127,10 +126,27 @@ func main() {
 					Value: ",",
 					Usage: "field delimiter",
 				},
-				cli.BoolFlag{
-					Name:  "trailing-comma",
-					Usage: "extra delimiter at end of line",
-				},
+			},
+			Action: func(c *cli.Context) {
+				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
+
+				filename := c.Args().First()
+				if filename == "" {
+					cli.ShowCommandHelp(c, "csv")
+					os.Exit(1)
+				}
+
+				ignoreErrors := c.GlobalBool("ignore-errors")
+				schema := c.GlobalString("schema")
+				tableName := parseTableName(c, filename)
+
+				skipHeader := c.Bool("skip-header")
+				fields := c.String("fields")
+				delimiter := c.String("delimiter")
+
+				connStr := parseConnStr(c)
+				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter)
+				exitOnError(err)
 			},
 		},
 	}
