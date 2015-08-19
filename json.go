@@ -11,13 +11,27 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/codegangsta/cli"
-	"github.com/lib/pq"
 )
 
 func isValidJSON(b []byte) bool {
 	var v interface{}
 	err := json.Unmarshal(b, &v)
 	return err == nil
+}
+
+// NewProgressBar initializes new progress bar based on size of file
+func NewProgressBar(file *os.File) *pb.ProgressBar {
+	fi, err := file.Stat()
+
+	total := int64(0)
+	if err == nil {
+		total = fi.Size()
+	}
+
+	bar := pb.New64(total)
+	bar.SetUnits(pb.U_BYTES)
+	bar.Start()
+	return bar
 }
 
 func importJSON(c *cli.Context) {
@@ -32,49 +46,37 @@ func importJSON(c *cli.Context) {
 	schema := c.GlobalString("schema")
 	tableName := parseTableName(c, filename)
 
-	db, err := connect(parseConnStr(c), schema)
-	failOnError(err, "Could not connect to db")
-	defer db.Close()
-
-	columns := []string{"data"}
-	table, err := createJSONTable(db, schema, tableName, columns[0])
-	failOnError(err, "Could not create table statement")
-
-	_, err = table.Exec()
-	failOnError(err, "Could not create table")
-
-	txn, err := db.Begin()
-	failOnError(err, "Could not start transaction")
-
-	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, columns...))
-	failOnError(err, "Could not prepare copy in statement")
-
 	file, err := os.Open(filename)
 	failOnError(err, "Cannot open file")
 	defer file.Close()
 
-	fi, err := file.Stat()
-	failOnError(err, "Could not find out file size of file")
-	total := fi.Size()
-	bar := pb.New64(total)
-	bar.SetUnits(pb.U_BYTES)
-	bar.Start()
+	db, err := connect(parseConnStr(c), schema)
+	failOnError(err, "Could not connect to db")
+	defer db.Close()
 
-	successCount := 0
-	failCount := 0
+	success := 0
+	failed := 0
+	bar := NewProgressBar(file)
+
+	i, err := NewJSONImport(db, schema, tableName, "data")
 
 	reader := bufio.NewReader(io.TeeReader(file, bar))
 	for {
+		// We use ReadBytes because it can deal with very long lines
+		// which happens often with big JSON objects
 		line, err := reader.ReadBytes('\n')
 
 		if err == io.EOF {
 			err = nil
 			break
 		}
+
+		//todo: Better error handling so that db can close
 		failOnError(err, "Could not read line")
 
+		//todo: not so happy with this part
 		handleError := func() {
-			failCount++
+			failed++
 			if c.GlobalBool("ignore-errors") {
 				os.Stderr.WriteString(string(line))
 			} else {
@@ -88,24 +90,15 @@ func importJSON(c *cli.Context) {
 			handleError()
 		}
 
-		_, err = stmt.Exec(string(line))
+		err = i.AddRow(string(line))
 		if err != nil {
 			handleError()
 		} else {
-			successCount++
+			success++
 		}
 
-		failOnError(err, "Could add bulk insert")
 	}
 
-	_, err = stmt.Exec()
-	failOnError(err, "Could not exec the bulk copy")
-
-	err = stmt.Close()
-	failOnError(err, "Could not close")
-
-	err = txn.Commit()
-	failOnError(err, "Could not commit transaction")
-
+	i.Commit()
 	bar.Finish()
 }

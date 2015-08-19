@@ -57,7 +57,7 @@ func newImport(db *sql.DB, schema string, tableName string, columns []string) (*
 }
 
 func (i *Import) AddRow(columns ...interface{}) error {
-	_, err := i.stmt.Exec(columns)
+	_, err := i.stmt.Exec(columns...)
 	return err
 }
 
