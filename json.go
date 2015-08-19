@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,27 +13,6 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/lib/pq"
 )
-
-func lineCounter(r io.Reader) (int, error) {
-	buf := make([]byte, 8196)
-	count := 0
-	lineSep := []byte{'\n'}
-
-	for {
-		c, err := r.Read(buf)
-		if err != nil && err != io.EOF {
-			return count, err
-		}
-
-		count += bytes.Count(buf[:c], lineSep)
-
-		if err == io.EOF {
-			break
-		}
-	}
-
-	return count, nil
-}
 
 func isValidJSON(b []byte) bool {
 	var v interface{}

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/codegangsta/cli"
 )
@@ -13,6 +15,17 @@ func failOnError(err error, msg string) {
 		log.Fatalf("%s: %s", msg, err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
+}
+
+//Parse table to copy to from given filename or passed flags
+func parseTableName(c *cli.Context, filename string) string {
+	tableName := c.GlobalString("table")
+	if tableName == "" {
+		base := filepath.Base(filename)
+		ext := filepath.Ext(filename)
+		tableName = strings.TrimSuffix(base, ext)
+	}
+	return postgresify(tableName)
 }
 
 func main() {

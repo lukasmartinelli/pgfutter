@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -36,17 +35,6 @@ func connect(connStr string, importSchema string) (*sql.DB, error) {
 
 	tryCreateSchema(db, importSchema)
 	return db, nil
-}
-
-//Parse table to copy to from given filename or passed flags
-func parseTableName(c *cli.Context, filename string) string {
-	tableName := c.GlobalString("table")
-	if tableName == "" {
-		base := filepath.Base(filename)
-		ext := filepath.Ext(filename)
-		tableName = strings.TrimSuffix(base, ext)
-	}
-	return postgresify(tableName)
 }
 
 //Makes sure that a string is a valid PostgreSQL identifier
