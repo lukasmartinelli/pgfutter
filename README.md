@@ -16,7 +16,7 @@ You can download a single binary for Linux, OSX or Windows.
 **OSX**
 
 ```bash
-wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3/pgfutter_darwin_amd64
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.1/pgfutter_darwin_amd64
 chmod +x pgfutter
 
 ./pgfutter --help
@@ -25,7 +25,7 @@ chmod +x pgfutter
 **Linux**
 
 ```bash
-wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3/pgfutter_linux_amd64
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.1/pgfutter_linux_amd64
 chmod +x pgfutter
 
 ./pgfutter --help
@@ -206,6 +206,12 @@ pgfutter csv --table violations traffic_violations.csv
 ## Alternatives
 
 For more sophisticated needs you should use [pgloader](http://pgloader.io).
+
+## Install from source
+
+```bash
+go get github.com/lukasmartinelli/pgfutter
+```
 
 ## Regression Tests
 
