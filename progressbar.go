@@ -17,6 +17,5 @@ func NewProgressBar(file *os.File) *pb.ProgressBar {
 
 	bar := pb.New64(total)
 	bar.SetUnits(pb.U_BYTES)
-	bar.Start()
 	return bar
 }

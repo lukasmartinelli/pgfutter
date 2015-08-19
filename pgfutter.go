@@ -10,10 +10,10 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-func exitOnError(err error, msg string) {
+func exitOnError(err error) {
 	log.SetFlags(0)
 	if err != nil {
-		log.Fatalln(msg)
+		log.Fatalln(err)
 	}
 }
 
@@ -89,9 +89,25 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name:   "json",
-			Usage:  "Import JSON objects into database",
-			Action: importJSON,
+			Name:  "json",
+			Usage: "Import JSON objects into database",
+			Action: func(c *cli.Context) {
+				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
+
+				filename := c.Args().First()
+				if filename == "" {
+					cli.ShowCommandHelp(c, "json")
+					os.Exit(1)
+				}
+
+				ignoreErrors := c.GlobalBool("ignore-errors")
+				schema := c.GlobalString("schema")
+				tableName := parseTableName(c, filename)
+
+				connStr := parseConnStr(c)
+				err := importJSON(filename, connStr, schema, tableName, ignoreErrors)
+				exitOnError(err)
+			},
 		},
 		{
 			Name:   "csv",

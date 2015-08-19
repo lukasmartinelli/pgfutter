@@ -3,27 +3,26 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"strings"
-
-	"github.com/codegangsta/cli"
 )
 
 // Try to JSON decode the bytes
-func isValidJSON(b []byte) bool {
+func tryUnmarshal(b []byte) error {
 	var v interface{}
 	err := json.Unmarshal(b, &v)
-	return err == nil
+	return err
 }
 
+//Copy JSON Rows and return list of errors
 func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, int, int) {
 	success := 0
 	failed := 0
 
 	for {
-		// We use ReadBytes because it can deal with very long lines
+		// ReadBytes instead of a Scanner because it can deal with very long lines
 		// which happens often with big JSON objects
 		line, err := reader.ReadBytes('\n')
 
@@ -32,21 +31,33 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 			break
 		}
 
-		//todo: Better error handling so that db can close
-		failOnError(err, "Could not read line")
-
-		valid := isValidJSON(line)
-		if valid {
-			err = i.AddRow(string(line))
+		if err != nil {
+			err = errors.New(fmt.Sprintf("%s: %s", err, line))
+			return err, success, failed
 		}
 
-		if !valid || err != nil {
-			failed++
+		err = tryUnmarshal(line)
+		if err != nil {
 			if ignoreErrors {
 				os.Stderr.WriteString(string(line))
 			} else {
+				err = errors.New(fmt.Sprintf("%s: %s", err, line))
 				return err, success, failed
 			}
+		}
+
+		err = i.AddRow(string(line))
+		if err != nil {
+			if ignoreErrors {
+				os.Stderr.WriteString(string(line))
+			} else {
+				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				return err, success, failed
+			}
+		}
+
+		if err != nil {
+			failed++
 		} else {
 			success++
 		}
@@ -55,40 +66,42 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 	return nil, success, failed
 }
 
-func importJSON(c *cli.Context) {
-	cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
-
-	filename := c.Args().First()
-	if filename == "" {
-		cli.ShowCommandHelp(c, "json")
-		os.Exit(1)
-	}
-
-	schema := c.GlobalString("schema")
-	tableName := parseTableName(c, filename)
+func importJSON(filename string, connStr string, schema string, tableName string, ignoreErrors bool) error {
 
 	file, err := os.Open(filename)
-	exitOnError(err, fmt.Sprintf("Cannot open %s", filename))
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
-	connStr := parseConnStr(c)
 	db, err := connect(connStr, schema)
-	exitOnError(err, fmt.Sprintf("Cannot connect to database %s", connStr))
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
-	bar := NewProgressBar(file)
 	i, err := NewJSONImport(db, schema, tableName, "data")
-	//handle error
-	reader := bufio.NewReader(io.TeeReader(file, bar))
-	err, _, _ = copyJSONRows(i, reader, c.GlobalBool("ignore-errors"))
-
-	bar.Finish()
 	if err != nil {
+		return err
+	}
 
+	bar := NewProgressBar(file)
+	reader := bufio.NewReader(io.TeeReader(file, bar))
+
+	bar.Start()
+	err, success, failed := copyJSONRows(i, reader, ignoreErrors)
+	bar.Finish()
+
+	if err != nil {
+		lineNumber := success + failed + 1
+		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
 	} else {
+		fmt.Println(fmt.Sprintf("%d rows have successfully been copied into %s.%s", success, schema, tableName))
 
-		// handle error
-		err = i.Commit()
-		failOnError(err, "Could not commit")
+		if ignoreErrors && failed > 0 {
+			fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
+		}
+
+		return i.Commit()
 	}
 }

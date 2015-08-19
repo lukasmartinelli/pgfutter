@@ -52,6 +52,7 @@ func importCsv(c *cli.Context) {
 	success := 0
 	failed := 0
 	bar := NewProgressBar(file)
+	bar.Start()
 
 	reader := csv.NewReader(io.TeeReader(file, bar))
 	reader.Comma = rune(c.String("delimiter")[0])
