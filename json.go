@@ -59,8 +59,10 @@ func importJSON(c *cli.Context) {
 	bar := NewProgressBar(file)
 
 	i, err := NewJSONImport(db, schema, tableName, "data")
+	failOnError(err, "Could not prepare import")
 
 	reader := bufio.NewReader(io.TeeReader(file, bar))
+
 	for {
 		// We use ReadBytes because it can deal with very long lines
 		// which happens often with big JSON objects
@@ -74,7 +76,6 @@ func importJSON(c *cli.Context) {
 		//todo: Better error handling so that db can close
 		failOnError(err, "Could not read line")
 
-		//todo: not so happy with this part
 		handleError := func() {
 			failed++
 			if c.GlobalBool("ignore-errors") {
@@ -99,6 +100,8 @@ func importJSON(c *cli.Context) {
 
 	}
 
-	i.Commit()
+	// handle error
+	err = i.Commit()
+	failOnError(err, "Could not commit")
 	bar.Finish()
 }
