@@ -11,6 +11,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// Parse columns from first header row or from flags
 func parseColumns(c *cli.Context, reader *csv.Reader) []string {
 	var err error
 	var columns []string

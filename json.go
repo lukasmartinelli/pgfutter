@@ -9,29 +9,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cheggaaa/pb"
 	"github.com/codegangsta/cli"
 )
 
+// Try to JSON decode the bytes
 func isValidJSON(b []byte) bool {
 	var v interface{}
 	err := json.Unmarshal(b, &v)
 	return err == nil
-}
-
-// NewProgressBar initializes new progress bar based on size of file
-func NewProgressBar(file *os.File) *pb.ProgressBar {
-	fi, err := file.Stat()
-
-	total := int64(0)
-	if err == nil {
-		total = fi.Size()
-	}
-
-	bar := pb.New64(total)
-	bar.SetUnits(pb.U_BYTES)
-	bar.Start()
-	return bar
 }
 
 func importJSON(c *cli.Context) {
