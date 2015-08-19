@@ -53,10 +53,11 @@ func postgresify(identifier string) string {
 		"-": "_",
 		",": "_",
 
-		"?": "",
-		"!": "",
-		"$": "",
-		"%": "",
+		"?":  "",
+		"!":  "",
+		"$":  "",
+		"%":  "",
+		"\"": "",
 	}
 	for oldString, newString := range replacements {
 		str = strings.Replace(str, oldString, newString, -1)

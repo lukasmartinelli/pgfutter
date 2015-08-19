@@ -24,13 +24,33 @@ function test_readme_csv_sample() {
 function import_csv_with_special_delimiter_and_trailing() {
     local table="qip12_tabdaten"
     local filename="$SAMPLES_DIR/qip12_tabdaten.csv"
-    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER csv "$filename" --delimiter=";" --trailing-comma
+    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER csv "$filename" --delimiter=";"
     if [ $? -ne 0 ]; then
         echo "pgfutter could not import $filename"
         exit 300
     else
         local db_count=$(query_counts $table)
         echo "Imported $(expr $db_count) records into $table"
+    fi
+}
+
+function import_csv_and_skip_header_row_with_custom_fields() {
+    local table="qip12_tabdaten"
+    local filename="$SAMPLES_DIR/qip12_tabdaten.csv"
+    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER csv "$filename"
+    if [ $? -eq 0 ]; then
+        echo "pgfutter should not be able to import $filename"
+        exit 300
+    fi
+}
+
+function csv_with_wrong_delimiter_should_fail() {
+    local table="metadatenbank_vernehmlassungen_ogd_v1_3"
+    local filename="$SAMPLES_DIR/Metadatenbank-Vernehmlassungen-OGD-V1-3.csv"
+    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER csv "$filename" --delimiter ";" --skip-header --fields "nr;typ_vernehmlassungsgegenstandes;titel_vernehmlassungsverfahrens;federfuhrendes_departement;fundort;adressaten;archivunterlagen;dokumententypen"
+    if [ $? -eq 0 ]; then
+        echo "pgfutter should not be able to import $filename"
+        exit 300
     fi
 }
 
@@ -50,8 +70,9 @@ function import_and_test_json() {
 function import_and_test_csv() {
     local table=$1
     local filename=$2
+    local delimiter=${3:-,}
 
-    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER csv "$filename"
+    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER csv "$filename" --delimiter $delimiter
     if [ $? -ne 0 ]; then
         echo "pgfutter could not import $filename"
         exit 300
@@ -63,6 +84,8 @@ function import_and_test_csv() {
 
 recreate_db
 
+csv_with_wrong_delimiter_should_fail
+import_csv_and_skip_header_row_with_custom_fields
 import_csv_with_special_delimiter_and_trailing
 import_and_test_json "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
 import_and_test_csv "parking_garage_availability" "$SAMPLES_DIR/parking_garage_availability.csv"
@@ -76,6 +99,5 @@ import_and_test_csv "distribution_of_wealth_switzerland" "$SAMPLES_DIR/distribut
 import_and_test_csv "customer_complaints" "$SAMPLES_DIR/customer_complaints.csv"
 import_and_test_csv "whitehouse_visits_2014" "$SAMPLES_DIR/whitehouse_visits_2014.csv"
 import_and_test_csv "traffic_violations" "$SAMPLES_DIR/traffic_violations.csv"
-import_and_test_csv "metadatenbank_vernehmlassungen_ogd_v1_3" "$SAMPLES_DIR/Metadatenbank-Vernehmlassungen-OGD-V1-3.csv"
 import_and_test_csv "wealth_groups" "$SAMPLES_DIR/Wealth_groups.csv"
 import_and_test_json "filepaths_1" "$SAMPLES_DIR/filepaths-1.json"

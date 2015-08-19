@@ -10,12 +10,22 @@ import (
 	"unicode/utf8"
 )
 
+func containsDelimiter(col string) bool {
+	return strings.Contains(col, ";") || strings.Contains(col, ",") ||
+		strings.Contains(col, "|") || strings.Contains(col, "\t") ||
+		strings.Contains(col, "^") || strings.Contains(col, "~")
+}
+
 // Parse columns from first header row or from flags
 func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string, error) {
 	var err error
 	var columns []string
-	if skipHeader {
+	if fields != "" {
 		columns = strings.Split(fields, ",")
+
+		if skipHeader {
+			reader.Read() //Force consume one row
+		}
 	} else {
 		columns, err = reader.Read()
 		if err != nil {
@@ -23,8 +33,14 @@ func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string,
 		}
 	}
 
-	for i, column := range columns {
-		columns[i] = postgresify(column)
+	for _, col := range columns {
+		if containsDelimiter(col) {
+			return columns, errors.New("delimiter in header column detected: " + col)
+		}
+	}
+
+	for i, col := range columns {
+		columns[i] = postgresify(col)
 	}
 
 	return columns, nil
@@ -105,6 +121,7 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 	if err != nil {
 		return err
 	}
+
 	reader.FieldsPerRecord = len(columns)
 
 	i, err := NewCSVImport(db, schema, tableName, columns)
@@ -123,7 +140,7 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 		}
 		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
 	} else {
-		fmt.Println(fmt.Sprintf("%d rows have successfully been copied into %s.%s", success, schema, tableName))
+		fmt.Println(fmt.Sprintf("%d rows imported into %s.%s", success, schema, tableName))
 
 		if ignoreErrors && failed > 0 {
 			fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))

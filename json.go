@@ -96,7 +96,7 @@ func importJSON(filename string, connStr string, schema string, tableName string
 		lineNumber := success + failed
 		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
 	} else {
-		fmt.Println(fmt.Sprintf("%d rows have successfully been copied into %s.%s", success, schema, tableName))
+		fmt.Println(fmt.Sprintf("%d rows imported into %s.%s", success, schema, tableName))
 
 		if ignoreErrors && failed > 0 {
 			fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
