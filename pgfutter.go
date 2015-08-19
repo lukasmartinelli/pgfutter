@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,13 +13,6 @@ func exitOnError(err error) {
 	log.SetFlags(0)
 	if err != nil {
 		log.Fatalln(err)
-	}
-}
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
 }
 

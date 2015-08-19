@@ -61,13 +61,6 @@ func (i *Import) AddRow(columns ...interface{}) error {
 	return err
 }
 
-func (i *Import) Rollback() error {
-	if i.txn != nil {
-		return i.txn.Rollback()
-	}
-	return nil
-}
-
 func (i *Import) Commit() error {
 
 	_, err := i.stmt.Exec()

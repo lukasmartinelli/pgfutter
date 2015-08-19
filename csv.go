@@ -5,60 +5,34 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"unicode/utf8"
 )
 
 // Parse columns from first header row or from flags
-func parseColumns(reader *csv.Reader, skipHeader bool, fields string) []string {
+func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string, error) {
 	var err error
 	var columns []string
 	if skipHeader {
 		columns = strings.Split(fields, ",")
 	} else {
 		columns, err = reader.Read()
-		failOnError(err, "Could not read header row")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for i, column := range columns {
 		columns[i] = postgresify(column)
 	}
 
-	return columns
+	return columns, nil
 }
 
-func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string) error {
-
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	db, err := connect(connStr, schema)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
+func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter string, columns []string) (error, int, int) {
 	success := 0
 	failed := 0
-	bar := NewProgressBar(file)
-	bar.Start()
-
-	reader := csv.NewReader(io.TeeReader(file, bar))
-	reader.Comma, _ = utf8.DecodeRuneInString(delimiter)
-	reader.LazyQuotes = true
-
-	columns := parseColumns(reader, skipHeader, fields)
-	reader.FieldsPerRecord = len(columns)
-
-	i, err := NewCSVImport(db, schema, tableName, columns)
-	if err != nil {
-		return err
-	}
 
 	for {
 		cols := make([]interface{}, len(columns))
@@ -75,41 +49,74 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 		}
 
 		if err != nil {
-			failed++
 			line := strings.Join(record, delimiter)
+			failed++
 
 			if ignoreErrors {
-				os.Stderr.WriteString(line)
+				os.Stderr.WriteString(string(line))
+				continue
 			} else {
-				msg := fmt.Sprintf("Could not parse %s: %s", err, line)
-				break
+				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				return err, success, failed
 			}
-		} else {
-			success++
 		}
 
 		err = i.AddRow(cols...)
 
 		if err != nil {
-			failed++
 			line := strings.Join(record, delimiter)
+			failed++
 
 			if ignoreErrors {
-				os.Stderr.WriteString(line)
+				os.Stderr.WriteString(string(line))
+				continue
 			} else {
-				msg := fmt.Sprintf("Could not import %s: %s", err, line)
-				log.Fatalln(msg)
-				panic(msg)
+				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				return err, success, failed
 			}
-		} else {
-			success++
 		}
+
+		success++
 	}
 
+	return nil, success, failed
+}
+
+func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string) error {
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	db, err := connect(connStr, schema)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	bar := NewProgressBar(file)
+	reader := csv.NewReader(io.TeeReader(file, bar))
+	reader.Comma, _ = utf8.DecodeRuneInString(delimiter)
+	reader.LazyQuotes = true
+
+	columns, err := parseColumns(reader, skipHeader, fields)
+	if err != nil {
+		return err
+	}
+	reader.FieldsPerRecord = len(columns)
+
+	i, err := NewCSVImport(db, schema, tableName, columns)
+	if err != nil {
+		return err
+	}
+
+	bar.Start()
+	err, success, failed := copyCSVRows(i, reader, ignoreErrors, delimiter, columns)
 	bar.Finish()
 
 	if err != nil {
-		i.Rollback()
 		lineNumber := success + failed
 		if !skipHeader {
 			lineNumber++
