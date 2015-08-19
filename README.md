@@ -168,6 +168,12 @@ skip the header row and pass a comma separated field name list.
 pgfutter csv --skip-header --fields "name,state,year" traffic_violations.csv
 ```
 
+If you don't have a header row in a document you should specify the field names as well.
+
+```bash
+pgfutter csv --fields "name,state,year" traffic_violations.csv
+```
+
 ### Encoding
 
 All CSV files need to be `utf-8` encoded. No other encoding is supported.
