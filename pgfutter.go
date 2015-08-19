@@ -10,6 +10,13 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+func exitOnError(err error, msg string) {
+	log.SetFlags(0)
+	if err != nil {
+		log.Fatalln(msg)
+	}
+}
+
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)

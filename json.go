@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
@@ -17,6 +16,43 @@ func isValidJSON(b []byte) bool {
 	var v interface{}
 	err := json.Unmarshal(b, &v)
 	return err == nil
+}
+
+func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, int, int) {
+	success := 0
+	failed := 0
+
+	for {
+		// We use ReadBytes because it can deal with very long lines
+		// which happens often with big JSON objects
+		line, err := reader.ReadBytes('\n')
+
+		if err == io.EOF {
+			err = nil
+			break
+		}
+
+		//todo: Better error handling so that db can close
+		failOnError(err, "Could not read line")
+
+		valid := isValidJSON(line)
+		if valid {
+			err = i.AddRow(string(line))
+		}
+
+		if !valid || err != nil {
+			failed++
+			if ignoreErrors {
+				os.Stderr.WriteString(string(line))
+			} else {
+				return err, success, failed
+			}
+		} else {
+			success++
+		}
+	}
+
+	return nil, success, failed
 }
 
 func importJSON(c *cli.Context) {
@@ -32,61 +68,27 @@ func importJSON(c *cli.Context) {
 	tableName := parseTableName(c, filename)
 
 	file, err := os.Open(filename)
-	failOnError(err, "Cannot open file")
+	exitOnError(err, fmt.Sprintf("Cannot open %s", filename))
 	defer file.Close()
 
-	db, err := connect(parseConnStr(c), schema)
-	failOnError(err, "Could not connect to db")
+	connStr := parseConnStr(c)
+	db, err := connect(connStr, schema)
+	exitOnError(err, fmt.Sprintf("Cannot connect to database %s", connStr))
 	defer db.Close()
 
-	success := 0
-	failed := 0
 	bar := NewProgressBar(file)
-
 	i, err := NewJSONImport(db, schema, tableName, "data")
-	failOnError(err, "Could not prepare import")
-
+	//handle error
 	reader := bufio.NewReader(io.TeeReader(file, bar))
+	err, _, _ = copyJSONRows(i, reader, c.GlobalBool("ignore-errors"))
 
-	for {
-		// We use ReadBytes because it can deal with very long lines
-		// which happens often with big JSON objects
-		line, err := reader.ReadBytes('\n')
-
-		if err == io.EOF {
-			err = nil
-			break
-		}
-
-		//todo: Better error handling so that db can close
-		failOnError(err, "Could not read line")
-
-		handleError := func() {
-			failed++
-			if c.GlobalBool("ignore-errors") {
-				os.Stderr.WriteString(string(line))
-			} else {
-				msg := fmt.Sprintf("Invalid JSON %s: %s", err, line)
-				log.Fatalln(msg)
-				panic(msg)
-			}
-		}
-
-		if !isValidJSON(line) {
-			handleError()
-		}
-
-		err = i.AddRow(string(line))
-		if err != nil {
-			handleError()
-		} else {
-			success++
-		}
-
-	}
-
-	// handle error
-	err = i.Commit()
-	failOnError(err, "Could not commit")
 	bar.Finish()
+	if err != nil {
+
+	} else {
+
+		// handle error
+		err = i.Commit()
+		failOnError(err, "Could not commit")
+	}
 }
