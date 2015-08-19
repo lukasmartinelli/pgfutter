@@ -18,7 +18,13 @@ You can download a single binary for Linux, OSX or Windows.
 ```bash
 wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/pgfutter_darwin_amd64
 chmod +x pgfutter
-./pgfutter --help
+
+cat << $ >> ~/.bash_profile
+> export PATH = "$(pwd):\$PATH"
+> $
+$ source ~/.bash_profile
+
+pgfutter --help
 ```
 
 **Linux**
@@ -26,7 +32,13 @@ chmod +x pgfutter
 ```bash
 wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/pgfutter_linux_amd64
 chmod +x pgfutter
-./pgfutter --help
+
+cat << $ >> ~/.bash_rc
+> export PATH = "$(pwd):\$PATH"
+> $
+$ source ~/.bash_rc
+
+pgfutter --help
 ```
 
 If you are using Windows or 32-bit architectures you need to [download the appropriate binary
