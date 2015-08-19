@@ -38,8 +38,10 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 
 		err = tryUnmarshal(line)
 		if err != nil {
+			failed++
 			if ignoreErrors {
 				os.Stderr.WriteString(string(line))
+				continue
 			} else {
 				err = errors.New(fmt.Sprintf("%s: %s", err, line))
 				return err, success, failed
@@ -48,19 +50,17 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 
 		err = i.AddRow(string(line))
 		if err != nil {
+			failed++
 			if ignoreErrors {
 				os.Stderr.WriteString(string(line))
+				continue
 			} else {
 				err = errors.New(fmt.Sprintf("%s: %s", err, line))
 				return err, success, failed
 			}
 		}
 
-		if err != nil {
-			failed++
-		} else {
-			success++
-		}
+		success++
 	}
 
 	return nil, success, failed
