@@ -76,12 +76,15 @@ CREATE TABLE public.friendship (
 )
 
 INSERT INTO public.person
-SELECT name, age
+SELECT name, age::int
 FROM import.friends
 
+WITH friends AS
+    (SELECT name as person, regexp_split_to_table(friends, E'\\,') AS friend
+    FROM import.friends)
 INSERT INTO public.friendship
-SELECT name as person, regexp_split_to_table(friends, E'\\,') as friend
-FROM import.friends
+SELECT * FROM
+friends WHERE friend <> ''
 ```
 
 ## Import JSON
