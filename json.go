@@ -82,6 +82,9 @@ func importJSON(c *cli.Context) {
 	bar.SetUnits(pb.U_BYTES)
 	bar.Start()
 
+	successCount := 0
+	failCount := 0
+
 	reader := bufio.NewReader(io.TeeReader(file, bar))
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -93,6 +96,7 @@ func importJSON(c *cli.Context) {
 		failOnError(err, "Could not read line")
 
 		handleError := func() {
+			failCount++
 			if c.GlobalBool("ignore-errors") {
 				os.Stderr.WriteString(string(line))
 			} else {
@@ -109,6 +113,8 @@ func importJSON(c *cli.Context) {
 		_, err = stmt.Exec(string(line))
 		if err != nil {
 			handleError()
+		} else {
+			successCount++
 		}
 
 		failOnError(err, "Could add bulk insert")

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -75,6 +76,9 @@ func importCsv(c *cli.Context) {
 	stmt, err := txn.Prepare(pq.CopyInSchema(schema, tableName, columns...))
 	failOnError(err, "Could not prepare copy in statement")
 
+	successCount := 0
+	failCount := 0
+
 	for {
 		cols := make([]interface{}, len(columns))
 		record, err := reader.Read()
@@ -87,8 +91,8 @@ func importCsv(c *cli.Context) {
 		}
 		failOnError(err, "Could not read csv")
 		_, err = stmt.Exec(cols...)
-		bar.Increment()
 		failOnError(err, "Could add bulk insert")
+		successCount++
 	}
 
 	_, err = stmt.Exec()
@@ -99,6 +103,19 @@ func importCsv(c *cli.Context) {
 
 	err = txn.Commit()
 	failOnError(err, "Could not commit transaction")
+
+	//print report
+	fmt.Println(fmt.Sprintf("Successfully copied %d rows into %s"))
+
+	if c.GlobalBool("ignore-errors") {
+		fmt.Println(fmt.Sprintf("%d rows could not be imported into %s and have been written to stderr."))
+	} else {
+		fmt.Println(fmt.Sprintf("%d rows could not be imported into %s."))
+	}
+
+	if failCount > 0 && c.GlobalBool("ignore-errors") {
+		fmt.Println("You can specify the --ignore-errors flag to write errors to stderr, instead of aborting the transcation.")
+	}
 
 	bar.Finish()
 }
