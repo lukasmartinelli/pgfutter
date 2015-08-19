@@ -1,4 +1,4 @@
-# pgfutter
+# pgfutter [![Build Status](https://travis-ci.org/lukasmartinelli/pgfutter.svg?branch=master)](https://travis-ci.org/lukasmartinelli/pgfutter)
 
 <img align="right" alt="elephant" src="elephant.jpg" />
 
