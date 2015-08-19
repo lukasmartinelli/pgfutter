@@ -48,18 +48,14 @@ func importCsv(c *cli.Context) {
 	failOnError(err, "Cannot open file")
 	defer file.Close()
 
-	//Is it really smart to read the whole file just to provide statistics?
-	lines, err := lineCounter(file)
-	failOnError(err, "Cannot count lines")
-	file.Seek(0, 0)
-	if !c.Bool("skip-header") {
-		lines -= 1
-	}
-
-	bar := pb.New(lines)
+	fi, err := file.Stat()
+	failOnError(err, "Could not find out file size of file")
+	total := fi.Size()
+	bar := pb.New64(total)
+	bar.SetUnits(pb.U_BYTES)
 	bar.Start()
 
-	reader := csv.NewReader(file)
+	reader := csv.NewReader(io.TeeReader(file, bar))
 	reader.Comma = rune(c.String("delimiter")[0])
 	reader.LazyQuotes = true
 	reader.TrailingComma = c.Bool("trailing-comma")

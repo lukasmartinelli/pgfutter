@@ -75,18 +75,16 @@ func importJSON(c *cli.Context) {
 	failOnError(err, "Cannot open file")
 	defer file.Close()
 
-	//Is it really smart to read the whole file just to provide statistics?
-	lines, err := lineCounter(file)
-	failOnError(err, "Cannot count lines")
-	file.Seek(0, 0)
-
-	bar := pb.New(lines)
+	fi, err := file.Stat()
+	failOnError(err, "Could not find out file size of file")
+	total := fi.Size()
+	bar := pb.New64(total)
+	bar.SetUnits(pb.U_BYTES)
 	bar.Start()
 
-	reader := bufio.NewReader(file)
+	reader := bufio.NewReader(io.TeeReader(file, bar))
 	for {
 		line, err := reader.ReadBytes('\n')
-		bar.Increment()
 
 		if err == io.EOF {
 			err = nil
