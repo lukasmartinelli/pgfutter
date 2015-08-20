@@ -1,4 +1,4 @@
-# pgfutter [![Build Status](https://travis-ci.org/lukasmartinelli/pgfutter.svg?branch=master)](https://travis-ci.org/lukasmartinelli/pgfutter)
+# pgfutter [![Build Status](https://travis-ci.org/lukasmartinelli/pgfutter.svg?branch=master)](https://travis-ci.org/lukasmartinelli/pgfutter) ![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)
 
 <img align="right" alt="elephant" src="elephant.jpg" />
 
