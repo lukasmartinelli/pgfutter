@@ -6,8 +6,13 @@ Import CSV and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
-`pgfutter` will only help you to get the data into the database. After that
-SQL is a great language to sanitize and normalize the data according to your desired database schema.
+Features:
+
+- Generated import tables
+- Good performance using the `COPY` streaming protocol
+- Importing over the network
+- Dealing with import errors
+- Easy deployment
 
 ## Install
 
@@ -62,7 +67,9 @@ Jacob   | 26 | Anthony         |
 Anthony | 25 |                 |
 Emma    | 28 | Jacob,Anthony   |
 
-Now you can start normalizing the data (it's not perfect in this example).
+
+`pgfutter` will only help you to get the data into the database. After that
+SQL is a great language to sanitize and normalize the data according to your desired database schema.
 
 ```sql
 CREATE TABLE public.person (
