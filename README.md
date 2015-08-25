@@ -36,6 +36,12 @@ chmod +x pgfutter
 ./pgfutter --help
 ```
 
+**Install from source**
+
+```bash
+go get github.com/lukasmartinelli/pgfutter
+```
+
 If you are using Windows or 32-bit architectures you need to [download the appropriate binary
 yourself](https://github.com/lukasmartinelli/pgfutter/releases/latest).
 
@@ -215,13 +221,7 @@ pgfutter csv --table violations traffic_violations.csv
 
 ## Alternatives
 
-For more sophisticated needs you should use [pgloader](http://pgloader.io).
-
-## Install from source
-
-```bash
-go get github.com/lukasmartinelli/pgfutter
-```
+For more sophisticated needs you should take a look at [pgloader](http://pgloader.io).
 
 ## Regression Tests
 
