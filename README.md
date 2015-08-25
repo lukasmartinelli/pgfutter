@@ -8,11 +8,11 @@ have to deal with when you just want to dump some data into the database.
 
 Features:
 
-- Generated import tables
+- Generated import tables (`pgfutter csv <file>` and your done)
 - Good performance using the `COPY` streaming protocol
-- Importing over the network
-- Dealing with import errors
 - Easy deployment
+- Dealing with import errors
+- Import over the network
 
 ## Install
 
