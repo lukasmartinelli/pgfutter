@@ -157,9 +157,9 @@ or as separate flags.
 
 name        | default     | description
 ------------|-------------|------------------------------
-`DB_NAME`   | `postgres`  | host name
-`DB_HOST`   | `localhost` | port
-`DB_PORT`   | `5432`      | username
+`DB_NAME`   | `postgres`  | database name
+`DB_HOST`   | `localhost` | host name
+`DB_PORT`   | `5432`      | port
 `DB_SCHEMA` | `import`    | schema to create tables for
 `DB_USER`   | `postgres`  | database user
 `DB_PASS`   |             | password (or empty if none)
