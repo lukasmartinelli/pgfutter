@@ -54,12 +54,6 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 		cols := make([]interface{}, len(columns))
 		record, err := reader.Read()
 
-		//Loop ensures we don't insert too many values and that
-		//values are properly converted into empty interfaces
-		for i, col := range record {
-			cols[i] = col
-		}
-
 		if err == io.EOF {
 			break
 		}
@@ -75,6 +69,12 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 				err = errors.New(fmt.Sprintf("%s: %s", err, line))
 				return err, success, failed
 			}
+		}
+
+		//Loop ensures we don't insert too many values and that
+		//values are properly converted into empty interfaces
+		for i, col := range record {
+			cols[i] = col
 		}
 
 		err = i.AddRow(cols...)
