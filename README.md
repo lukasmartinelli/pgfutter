@@ -21,7 +21,7 @@ You can download a single binary for Linux, OSX or Windows.
 **OSX**
 
 ```bash
-wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.1/pgfutter_darwin_amd64
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.2/pgfutter_darwin_amd64
 chmod +x pgfutter
 
 ./pgfutter --help
@@ -30,7 +30,7 @@ chmod +x pgfutter
 **Linux**
 
 ```bash
-wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.1/pgfutter_linux_amd64
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.2/pgfutter_linux_amd64
 chmod +x pgfutter
 
 ./pgfutter --help
