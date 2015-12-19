@@ -177,6 +177,16 @@ pgfutter csv -d "\t" traffic_violations.csv
 You have to use `"` as a quoting character and `\` as escape character.
 You might omit the quoting character if it is not necessary.
 
+
+### Using TAB as delimiter
+
+If you want to use tab as delimiter you need to pass `$'\t'` as delimiter
+to ensure your shell does not swallow the correct delimiter.
+
+```bash
+pgfutter csv -d $'\t' traffic_violations.csv
+```
+
 ### Custom header fields
 
 If you want to specify the field names explicitly you can
