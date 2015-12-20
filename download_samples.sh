@@ -6,14 +6,12 @@ function download_json_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
     wget -nc http://data.githubarchive.org/2015-01-01-15.json.gz && gunzip -f 2015-01-01-15.json.gz
-    wget -nc https://s3-eu-west-1.amazonaws.com/repostruct/filepaths-1.json.tar.gz && tar -xvzf filepaths-1.json.tar.gz
     cd $CWD
 }
 
 function download_csv_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
-    wget -nc https://s3-eu-west-1.amazonaws.com/repostruct/all_repos_analyzed.csv.tar.gz && tar -xvzf all_repos_analyzed.csv.tar.gz
     wget -nc -O parking_garage_availability.csv https://data.montgomerycountymd.gov/api/views/qahs-fevu/rows.csv
     wget -nc -O local_severe_wheather_warning_systems.csv https://data.mo.gov/api/views/n59h-ggai/rows.csv
     wget -nc -O montgomery_crime.csv https://data.montgomerycountymd.gov/api/views/icn6-v9z3/rows.csv

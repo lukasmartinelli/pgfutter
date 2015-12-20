@@ -85,7 +85,6 @@ function import_and_test_csv() {
 
 recreate_db
 
-import_and_test_csv "all_repos_analyzed" "$SAMPLES_DIR/all_repos_analyzed.csv" " " "--ignore-errors"
 csv_with_wrong_delimiter_should_fail
 import_csv_and_skip_header_row_with_custom_fields
 import_csv_with_special_delimiter_and_trailing
@@ -102,6 +101,5 @@ import_and_test_csv "distribution_of_wealth_switzerland" "$SAMPLES_DIR/distribut
 import_and_test_csv "customer_complaints" "$SAMPLES_DIR/customer_complaints.csv"
 import_and_test_csv "whitehouse_visits_2014" "$SAMPLES_DIR/whitehouse_visits_2014.csv"
 import_and_test_csv "traffic_violations" "$SAMPLES_DIR/traffic_violations.csv"
-import_and_test_json "filepaths_1" "$SAMPLES_DIR/filepaths-1.json"
 
 recreate_db
