@@ -63,6 +63,7 @@ func postgresify(identifier string) string {
 		"!":  "",
 		"$":  "",
 		"%":  "",
+		"*":  "",
 		"\"": "",
 	}
 	for oldString, newString := range replacements {
