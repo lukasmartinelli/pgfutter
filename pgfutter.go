@@ -57,6 +57,10 @@ func main() {
 			Usage:  "username",
 			EnvVar: "DB_USER",
 		},
+		cli.BoolFlag{
+			Name:  "ssl",
+			Usage: "require ssl mode",
+		},
 		cli.StringFlag{
 			Name:   "pass, pw",
 			Value:  "",
