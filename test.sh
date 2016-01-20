@@ -1,9 +1,9 @@
 #!/bin/bash
-CWD=$(pwd)
-SAMPLES_DIR="$CWD/samples"
-DB_USER="postgres"
-DB_NAME="integration_test"
-DB_SCHEMA="import" # Use public schema instead of import because of permissions
+readonly CWD=$(pwd)
+readonly SAMPLES_DIR="$CWD/samples"
+readonly DB_USER=${DB_USER:-postgres}
+readonly DB_NAME="integration_test"
+readonly DB_SCHEMA="import" # Use public schema instead of import because of permissions
 
 function recreate_db() {
   psql -U ${DB_USER} -c "drop database if exists ${DB_NAME};"
