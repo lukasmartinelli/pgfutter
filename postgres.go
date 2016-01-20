@@ -85,6 +85,9 @@ func postgresify(identifier string) string {
 //parse sql connection string from cli flags
 func parseConnStr(c *cli.Context) string {
 	otherParams := "sslmode=disable connect_timeout=5"
+	if c.GlobalBool("ssl") {
+		otherParams = "sslmode=require connect_timeout=5"
+	}
 	return fmt.Sprintf("user=%s dbname=%s password='%s' host=%s port=%s %s",
 		c.GlobalString("username"),
 		c.GlobalString("dbname"),
