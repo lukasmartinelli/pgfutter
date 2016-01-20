@@ -35,7 +35,7 @@ func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string,
 
 	for _, col := range columns {
 		if containsDelimiter(col) {
-			return columns, errors.New("delimiter in header column detected: " + col)
+			return columns, errors.New("Please specify the correct delimiter with -d.\nHeader column contains a delimiter character: " + col)
 		}
 	}
 
