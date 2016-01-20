@@ -91,7 +91,8 @@ import_csv_with_special_delimiter_and_trailing
 
 import_and_test_json "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
 import_and_test_csv "parking_garage_availability" "$SAMPLES_DIR/parking_garage_availability.csv"
-import_and_test_csv "local_severe_wheather_warning_systems" "$SAMPLES_DIR/local_severe_wheather_warning_systems.csv"
+# File can no longer be downloaded
+#import_and_test_csv "local_severe_wheather_warning_systems" "$SAMPLES_DIR/local_severe_wheather_warning_systems.csv"
 # CSV file broke and has now invalid number of columns
 # import_and_test_csv "montgomery_crime" "$SAMPLES_DIR/montgomery_crime.csv"
 import_and_test_csv "employee_salaries" "$SAMPLES_DIR/employee_salaries.csv"
