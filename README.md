@@ -21,7 +21,7 @@ You can download a single binary for Linux, OSX or Windows.
 **OSX**
 
 ```bash
-wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.2/pgfutter_darwin_amd64
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.4/pgfutter_darwin_amd64
 chmod +x pgfutter
 
 ./pgfutter --help
@@ -30,7 +30,7 @@ chmod +x pgfutter
 **Linux**
 
 ```bash
-wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.3.2/pgfutter_linux_amd64
+wget -O pgfutter https://github.com/lukasmartinelli/pgfutter/releases/download/v0.4/pgfutter_linux_amd64
 chmod +x pgfutter
 
 ./pgfutter --help
@@ -227,6 +227,15 @@ This works the same for invalid JSON objects.
 
 ```bash
 pgfutter csv --table violations traffic_violations.csv
+```
+
+### Import single JSON object
+
+Instead of using JSON lines you can also [import a single JSON object](https://github.com/lukasmartinelli/pgfutter/issues/9)
+into the database. This will load the JSON document into memory first.
+
+```bash
+pgfutter jsonobj document.json
 ```
 
 ## Alternatives
