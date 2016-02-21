@@ -14,6 +14,8 @@ Features:
 - Dealing with import errors
 - Import over the network
 
+> Check out [pgclimb](https://github.com/lukasmartinelli/pgclimb) for exporting data from PostgreSQL into different data formats.
+
 ## Install
 
 You can download a single binary for Linux, OSX or Windows.
