@@ -68,15 +68,10 @@ func (i *Import) Commit() error {
 		return err
 	}
 
-	err = i.stmt.Close()
-	if err != nil {
-		return err
-	}
+	// Statement might already be closed
+	// therefore ignore errors
+	_ = i.stmt.Close()
 
-	err = i.txn.Commit()
-	if err != nil {
-		return err
-	}
+	return i.txn.Commit()
 
-	return nil
 }

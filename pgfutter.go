@@ -87,7 +87,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:  "json",
-			Usage: "Import JSON objects into database",
+			Usage: "Import newline-delimited JSON objects into database",
 			Action: func(c *cli.Context) {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
@@ -103,6 +103,26 @@ func main() {
 
 				connStr := parseConnStr(c)
 				err := importJSON(filename, connStr, schema, tableName, ignoreErrors)
+				exitOnError(err)
+			},
+		},
+		{
+			Name:  "jsonobj",
+			Usage: "Import single JSON object into database",
+			Action: func(c *cli.Context) {
+				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
+
+				filename := c.Args().First()
+				if filename == "" {
+					cli.ShowCommandHelp(c, "jsonobj")
+					os.Exit(1)
+				}
+
+				schema := c.GlobalString("schema")
+				tableName := parseTableName(c, filename)
+
+				connStr := parseConnStr(c)
+				err := importJSONObject(filename, connStr, schema, tableName)
 				exitOnError(err)
 			},
 		},
