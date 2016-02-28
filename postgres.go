@@ -104,11 +104,7 @@ func createJSONTable(db *sql.DB, schema string, tableName string, column string)
 	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s JSON)", fullyQualifiedTable, column)
 
 	statement, err := db.Prepare(tableSchema)
-	if err == nil {
-		return statement, err
-	}
-
-	return statement, nil
+	return statement, err
 }
 
 //create table with TEXT columns
@@ -122,9 +118,5 @@ func createTable(db *sql.DB, schema string, tableName string, columns []string) 
 	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", fullyQualifiedTable, columnDefinitions)
 
 	statement, err := db.Prepare(tableSchema)
-	if err == nil {
-		return statement, err
-	}
-
-	return statement, nil
+	return statement, err
 }
