@@ -113,6 +113,7 @@ Create `friends.json`.
 {"name": "Jacob", "age": 26, "friends": ["Anthony"]}
 {"name": "Anthony", "age": 25, "friends": []}
 {"name": "Emma", "age": 28, "friends": ["Jacob", "Anthony"]}
+
 ```
 
 Import the JSON file.
