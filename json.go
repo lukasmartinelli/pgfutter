@@ -100,12 +100,6 @@ func importJSONObject(filename string, connStr string, schema string, tableName 
 
 func importJSON(filename string, connStr string, schema string, tableName string, ignoreErrors bool) error {
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
 	db, err := connect(connStr, schema)
 	if err != nil {
 		return err
@@ -117,12 +111,24 @@ func importJSON(filename string, connStr string, schema string, tableName string
 		return err
 	}
 
-	bar := NewProgressBar(file)
-	reader := bufio.NewReader(io.TeeReader(file, bar))
+	var success, failed int
+	if filename == "" {
+		reader := bufio.NewReader(os.Stdin)
+		err, success, failed = copyJSONRows(i, reader, ignoreErrors)
+	} else {
+		file, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
 
-	bar.Start()
-	err, success, failed := copyJSONRows(i, reader, ignoreErrors)
-	bar.Finish()
+		bar := NewProgressBar(file)
+		reader := bufio.NewReader(io.TeeReader(file, bar))
+		bar.Start()
+		err, success, failed = copyJSONRows(i, reader, ignoreErrors)
+		bar.Finish()
+	}
+
 
 	if err != nil {
 		lineNumber := success + failed

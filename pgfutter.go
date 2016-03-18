@@ -92,10 +92,10 @@ func main() {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
 				filename := c.Args().First()
-				if filename == "" {
-					cli.ShowCommandHelp(c, "json")
-					os.Exit(1)
-				}
+				//if filename == "" {
+					//cli.ShowCommandHelp(c, "json")
+					//os.Exit(1)
+				//}
 
 				ignoreErrors := c.GlobalBool("ignore-errors")
 				schema := c.GlobalString("schema")
