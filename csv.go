@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/cheggaaa/pb"
 )
 
 func containsDelimiter(col string) bool {
@@ -100,20 +102,27 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 
 func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string) error {
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
 	db, err := connect(connStr, schema)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	bar := NewProgressBar(file)
-	reader := csv.NewReader(io.TeeReader(file, bar))
+	var reader *csv.Reader
+	var bar *pb.ProgressBar 
+	if filename != "" {
+		file, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		bar = NewProgressBar(file)
+		reader = csv.NewReader(io.TeeReader(file, bar))
+	} else {
+		reader = csv.NewReader(os.Stdin)
+	}
+
 	reader.Comma, _ = utf8.DecodeRuneInString(delimiter)
 	reader.LazyQuotes = true
 
@@ -129,9 +138,14 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 		return err
 	}
 
-	bar.Start()
-	err, success, failed := copyCSVRows(i, reader, ignoreErrors, delimiter, columns)
-	bar.Finish()
+	var success, failed int
+	if filename != "" {
+		bar.Start()
+		err, success, failed = copyCSVRows(i, reader, ignoreErrors, delimiter, columns)
+		bar.Finish()
+	} else {
+		err, success, failed = copyCSVRows(i, reader, ignoreErrors, delimiter, columns)
+	}
 
 	if err != nil {
 		lineNumber := success + failed

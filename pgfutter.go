@@ -20,6 +20,10 @@ func exitOnError(err error) {
 func parseTableName(c *cli.Context, filename string) string {
 	tableName := c.GlobalString("table")
 	if tableName == "" {
+		if filename == "" {
+			// if no filename is not set, we reading stdin
+			filename = "stdin"
+		}
 		base := filepath.Base(filename)
 		ext := filepath.Ext(filename)
 		tableName = strings.TrimSuffix(base, ext)
@@ -92,10 +96,6 @@ func main() {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
 				filename := c.Args().First()
-				if filename == "" {
-					cli.ShowCommandHelp(c, "json")
-					os.Exit(1)
-				}
 
 				ignoreErrors := c.GlobalBool("ignore-errors")
 				schema := c.GlobalString("schema")
@@ -113,10 +113,6 @@ func main() {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
 				filename := c.Args().First()
-				if filename == "" {
-					cli.ShowCommandHelp(c, "jsonobj")
-					os.Exit(1)
-				}
 
 				schema := c.GlobalString("schema")
 				tableName := parseTableName(c, filename)
@@ -148,10 +144,6 @@ func main() {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
 
 				filename := c.Args().First()
-				if filename == "" {
-					cli.ShowCommandHelp(c, "csv")
-					os.Exit(1)
-				}
 
 				ignoreErrors := c.GlobalBool("ignore-errors")
 				schema := c.GlobalString("schema")

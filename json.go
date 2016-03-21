@@ -77,7 +77,12 @@ func importJSONObject(filename string, connStr string, schema string, tableName 
 	// The entire file is read into memory because we need to add
 	// it into the PostgreSQL transaction, this will hit memory limits
 	// for big JSON objects
-	bytes, err := ioutil.ReadFile(filename)
+	var bytes []byte
+	if filename == "" {
+		bytes, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		bytes, err = ioutil.ReadFile(filename)
+	}
 	if err != nil {
 		return err
 	}
@@ -100,12 +105,6 @@ func importJSONObject(filename string, connStr string, schema string, tableName 
 
 func importJSON(filename string, connStr string, schema string, tableName string, ignoreErrors bool) error {
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
 	db, err := connect(connStr, schema)
 	if err != nil {
 		return err
@@ -117,12 +116,24 @@ func importJSON(filename string, connStr string, schema string, tableName string
 		return err
 	}
 
-	bar := NewProgressBar(file)
-	reader := bufio.NewReader(io.TeeReader(file, bar))
+	var success, failed int
+	if filename == "" {
+		reader := bufio.NewReader(os.Stdin)
+		err, success, failed = copyJSONRows(i, reader, ignoreErrors)
+	} else {
+		file, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
 
-	bar.Start()
-	err, success, failed := copyJSONRows(i, reader, ignoreErrors)
-	bar.Finish()
+		bar := NewProgressBar(file)
+		reader := bufio.NewReader(io.TeeReader(file, bar))
+		bar.Start()
+		err, success, failed = copyJSONRows(i, reader, ignoreErrors)
+		bar.Finish()
+	}
+
 
 	if err != nil {
 		lineNumber := success + failed
