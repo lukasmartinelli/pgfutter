@@ -77,7 +77,12 @@ func importJSONObject(filename string, connStr string, schema string, tableName 
 	// The entire file is read into memory because we need to add
 	// it into the PostgreSQL transaction, this will hit memory limits
 	// for big JSON objects
-	bytes, err := ioutil.ReadFile(filename)
+	var bytes []byte
+	if filename == "" {
+		bytes, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		bytes, err = ioutil.ReadFile(filename)
+	}
 	if err != nil {
 		return err
 	}
