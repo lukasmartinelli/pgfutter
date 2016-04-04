@@ -52,7 +52,8 @@ func postgresify(identifier string) string {
 		"|": "_",
 		"-": "_",
 		",": "_",
-
+		"#": "_",
+		
 		"[":  "",
 		"]":  "",
 		"{":  "",
