@@ -34,7 +34,7 @@ func parseTableName(c *cli.Context, filename string) string {
 func main() {
 	app := cli.NewApp()
 	app.Name = "pgfutter"
-	app.Version = "0.4"
+	app.Version = "1.0"
 	app.Usage = "Import JSON and CSV into PostgreSQL the easy way"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
