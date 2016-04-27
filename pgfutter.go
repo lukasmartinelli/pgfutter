@@ -31,6 +31,15 @@ func parseTableName(c *cli.Context, filename string) string {
 	return postgresify(tableName)
 }
 
+func getDataType(c *cli.Context) string {
+	dataType := "json"
+	if c.GlobalBool("jsonb") {
+		dataType = "jsonb"
+	}
+
+	return dataType
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "pgfutter"
@@ -83,6 +92,10 @@ func main() {
 			EnvVar: "DB_TABLE",
 		},
 		cli.BoolFlag{
+			Name:  "jsonb",
+			Usage: "use JSONB data type",
+		},
+		cli.BoolFlag{
 			Name:  "ignore-errors",
 			Usage: "halt transaction on inconsistencies",
 		},
@@ -100,9 +113,10 @@ func main() {
 				ignoreErrors := c.GlobalBool("ignore-errors")
 				schema := c.GlobalString("schema")
 				tableName := parseTableName(c, filename)
+				dataType := getDataType(c)
 
 				connStr := parseConnStr(c)
-				err := importJSON(filename, connStr, schema, tableName, ignoreErrors)
+				err := importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
 				exitOnError(err)
 			},
 		},
@@ -116,9 +130,10 @@ func main() {
 
 				schema := c.GlobalString("schema")
 				tableName := parseTableName(c, filename)
+				dataType := getDataType(c)
 
 				connStr := parseConnStr(c)
-				err := importJSONObject(filename, connStr, schema, tableName)
+				err := importJSONObject(filename, connStr, schema, tableName, dataType)
 				exitOnError(err)
 			},
 		},
