@@ -67,7 +67,7 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 	return nil, success, failed
 }
 
-func importJSONObject(filename string, connStr string, schema string, tableName string) error {
+func importJSONObject(filename string, connStr string, schema string, tableName string, dataType string) error {
 	db, err := connect(connStr, schema)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func importJSONObject(filename string, connStr string, schema string, tableName 
 		return err
 	}
 
-	i, err := NewJSONImport(db, schema, tableName, "data")
+	i, err := NewJSONImport(db, schema, tableName, "data", dataType)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func importJSONObject(filename string, connStr string, schema string, tableName 
 	return i.Commit()
 }
 
-func importJSON(filename string, connStr string, schema string, tableName string, ignoreErrors bool) error {
+func importJSON(filename string, connStr string, schema string, tableName string, ignoreErrors bool, dataType string) error {
 
 	db, err := connect(connStr, schema)
 	if err != nil {
@@ -111,7 +111,7 @@ func importJSON(filename string, connStr string, schema string, tableName string
 	}
 	defer db.Close()
 
-	i, err := NewJSONImport(db, schema, tableName, "data")
+	i, err := NewJSONImport(db, schema, tableName, "data", dataType)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,6 @@ func importJSON(filename string, connStr string, schema string, tableName string
 		err, success, failed = copyJSONRows(i, reader, ignoreErrors)
 		bar.Finish()
 	}
-
 
 	if err != nil {
 		lineNumber := success + failed

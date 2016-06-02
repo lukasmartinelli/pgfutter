@@ -16,6 +16,12 @@ function query_counts() {
     echo "$counts"
 }
 
+function query_field_type() {
+    local table=$1
+    local data_type=$(psql -U ${DB_USER} -d ${DB_NAME} -t -c "SELECT data_type FROM information_schema.columns WHERE table_schema='${DB_SCHEMA}' AND table_name='${table}'")
+    echo "$data_type"
+}
+
 function test_readme_csv_sample() {
     # test whether readme docs still work
     echo "test"
@@ -63,7 +69,22 @@ function import_and_test_json() {
         exit 300
     else
         local db_count=$(query_counts $table)
-        echo "Imported $(expr $db_count) records into $table"
+        local data_type=$(query_field_type $table)
+        echo "Imported $(expr $db_count) records into $table as $data_type"
+    fi
+}
+
+function import_and_test_json_as_jsonb() {
+    local table=$1
+    local filename=$2
+    pgfutter --schema $DB_SCHEMA --db $DB_NAME --user $DB_USER --jsonb json "$filename"
+    if [ $? -ne 0 ]; then
+        echo "pgfutter could not import $filename"
+        exit 300
+    else
+        local db_count=$(query_counts $table)
+        local data_type=$(query_field_type $table)
+        echo "Imported $(expr $db_count) records into $table as $data_type"
     fi
 }
 
@@ -90,6 +111,11 @@ import_csv_and_skip_header_row_with_custom_fields
 import_csv_with_special_delimiter_and_trailing
 
 import_and_test_json "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
+
+# We change the type of the data column for this test, so we have to recreate the database
+recreate_db
+import_and_test_json_as_jsonb "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
+
 import_and_test_csv "parking_garage_availability" "$SAMPLES_DIR/parking_garage_availability.csv"
 # File can no longer be downloaded
 #import_and_test_csv "local_severe_wheather_warning_systems" "$SAMPLES_DIR/local_severe_wheather_warning_systems.csv"

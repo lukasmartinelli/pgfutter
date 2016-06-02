@@ -26,9 +26,9 @@ func NewCSVImport(db *sql.DB, schema string, tableName string, columns []string)
 	return newImport(db, schema, tableName, columns)
 }
 
-func NewJSONImport(db *sql.DB, schema string, tableName string, column string) (*Import, error) {
+func NewJSONImport(db *sql.DB, schema string, tableName string, column string, dataType string) (*Import, error) {
 
-	table, err := createJSONTable(db, schema, tableName, column)
+	table, err := createJSONTable(db, schema, tableName, column, dataType)
 	if err != nil {
 		return nil, err
 	}
