@@ -16,3 +16,4 @@ install:
   - ./download_samples.sh
 script:
   - go install && ./test.sh
+  - go test
