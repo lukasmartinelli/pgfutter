@@ -120,7 +120,7 @@ import_and_test_json_as_jsonb "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
 #import_and_test_csv "local_severe_wheather_warning_systems" "$SAMPLES_DIR/local_severe_wheather_warning_systems.csv"
 # CSV file broke and has now invalid number of columns
 # import_and_test_csv "montgomery_crime" "$SAMPLES_DIR/montgomery_crime.csv"
-import_and_test_csv "employee_salaries" "$SAMPLES_DIR/employee_salaries.csv"
+#import_and_test_csv "employee_salaries" "$SAMPLES_DIR/employee_salaries.csv"
 import_and_test_csv "residential_permits" "$SAMPLES_DIR/residential_permits.csv"
 import_and_test_csv "steuertarife" "$SAMPLES_DIR/Steuertarife.csv"
 import_and_test_csv "vermoegensklassen" "$SAMPLES_DIR/Vermoegensklassen.csv"
