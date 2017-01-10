@@ -116,7 +116,6 @@ import_and_test_json "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
 recreate_db
 import_and_test_json_as_jsonb "_2015_01_01_15" "$SAMPLES_DIR/2015-01-01-15.json"
 
-import_and_test_csv "parking_garage_availability" "$SAMPLES_DIR/parking_garage_availability.csv"
 # File can no longer be downloaded
 #import_and_test_csv "local_severe_wheather_warning_systems" "$SAMPLES_DIR/local_severe_wheather_warning_systems.csv"
 # CSV file broke and has now invalid number of columns
