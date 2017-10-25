@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -154,6 +155,10 @@ func main() {
 					Value: ",",
 					Usage: "field delimiter",
 				},
+				cli.BoolFlag{
+					Name:  "skip-parse-delimiter",
+					Usage: "skip parsing escape sequences in the given delimiter",
+				},
 			},
 			Action: func(c *cli.Context) {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
@@ -166,8 +171,9 @@ func main() {
 
 				skipHeader := c.Bool("skip-header")
 				fields := c.String("fields")
-				delimiter := c.String("delimiter")
-
+				skipParseheader := c.Bool("skip-parse-delimiter")
+				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
+				fmt.Println(delimiter)
 				connStr := parseConnStr(c)
 				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter)
 				exitOnError(err)
