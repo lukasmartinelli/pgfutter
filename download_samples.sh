@@ -5,30 +5,28 @@ SAMPLES_DIR="$CWD/samples"
 function download_json_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
-    wget -nc http://data.githubarchive.org/2015-01-01-15.json.gz && gunzip -f 2015-01-01-15.json.gz
+    wget -nc wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/json_sample_2015-01-01-15.json
     cd $CWD
 }
 
 function download_csv_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
-    wget -nc -O local_severe_wheather_warning_systems.csv https://data.mo.gov/api/views/n59h-ggai/rows.csv
-    wget -nc -O montgomery_crime.csv https://data.montgomerycountymd.gov/api/views/icn6-v9z3/rows.csv
-    wget -nc -O employee_salaries.csv https://data.montgomerycountymd.gov/api/views/54rh-89p8/rows.csv
-    wget -nc -O residential_permits.csv https://data.montgomerycountymd.gov/api/views/m88u-pqki/rows.csv
-    wget -nc -O customer_complaints.csv https://data.consumerfinance.gov/api/views/x94z-ydhh/rows.csv
-    wget -nc -O traffic_violations.csv https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv
-    wget -nc -O distribution_of_wealth_switzerland.csv http://bar-opendata-ch.s3.amazonaws.com/Kanton-ZH/Statistik/Distribution_of_wealth.csv
-    wget -nc http://bar-opendata-ch.s3.amazonaws.com/Kanton-ZH/Statistik/Wealth_groups.csv
-    wget -nc http://bar-opendata-ch.s3.amazonaws.com/Kanton-ZH/Statistik/Vermoegensklassen.csv
-    wget -nc http://bar-opendata-ch.s3.amazonaws.com/Kanton-ZH/Statistik/Steuertarife.csv
-    wget -nc http://bar-opendata-ch.s3.amazonaws.com/Kanton-ZH/Statistik/Tax_rates.csv
-    wget -nc -O whitehouse_visits_2014.zip https://www.whitehouse.gov/sites/default/files/disclosures/whitehouse_waves-2014_12.csv_.zip && unzip -o  whitehouse_visits_2014.zip && rm -f whitehouse_visits_2014.csv && mv whitehouse_waves-2014_12.csv.csv whitehouse_visits_2014.csv
-    wget -nc http://bar-opendata-ch.s3.amazonaws.com/ch.bag/Spitalstatistikdateien/qip/2012/qip12_tabdaten.csv
-    wget -nc http://bar-opendata-ch.s3.amazonaws.com/ch.bar.bar-02/Metadatenbank-Vernehmlassungen-OGD-V1-3.csv
-    wget -nc https://www.data.gov/app/uploads/2015/08/opendatasites.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_distribution_of_wealth_switzerland.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_employee_salaries.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_local_severe_wheather_warning_systems.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_montgomery_crime.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_qip12_tabdaten.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_residential_permits.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_sacramentocrime_jan_2006.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_sacramento_realestate_transactions.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_sales_jan_2009.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_steuertarife.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_techcrunch_continental_usa.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_vermoegensklassen.csv
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/csv_sample_metadatenbank.csv
     cd $CWD
 }
 
-download_csv_samples
 download_json_samples
+download_csv_samples
