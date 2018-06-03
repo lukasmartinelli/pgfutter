@@ -122,23 +122,6 @@ func main() {
 			},
 		},
 		{
-			Name:  "jsonobj",
-			Usage: "Import single JSON object into database",
-			Action: func(c *cli.Context) error {
-				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
-
-				filename := c.Args().First()
-
-				schema := c.GlobalString("schema")
-				tableName := parseTableName(c, filename)
-				dataType := getDataType(c)
-
-				connStr := parseConnStr(c)
-				err := importJSONObject(filename, connStr, schema, tableName, dataType)
-				return err
-			},
-		},
-		{
 			Name:  "csv",
 			Usage: "Import CSV into database",
 			Flags: []cli.Flag{

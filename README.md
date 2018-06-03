@@ -232,15 +232,6 @@ This works the same for invalid JSON objects.
 pgfutter csv --table violations traffic_violations.csv
 ```
 
-### Import single JSON object
-
-Instead of using JSON lines you can also [import a single JSON object](https://github.com/lukasmartinelli/pgfutter/issues/9)
-into the database. This will load the JSON document into memory first.
-
-```bash
-pgfutter jsonobj document.json
-```
-
 ## Alternatives
 
 For more sophisticated needs you should take a look at [pgloader](http://pgloader.io).
