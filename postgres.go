@@ -94,10 +94,10 @@ func parseConnStr(c *cli.Context) string {
 	)
 }
 
-//create table with a single JSON column data
-func createJSONTable(db *sql.DB, schema string, tableName string, column string) (*sql.Stmt, error) {
+//create table with a single JSON or JSONB column data
+func createJSONTable(db *sql.DB, schema string, tableName string, column string, dataType string) (*sql.Stmt, error) {
 	fullyQualifiedTable := fmt.Sprintf("%s.%s", schema, tableName)
-	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s JSON)", fullyQualifiedTable, column)
+	tableSchema := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s %s)", fullyQualifiedTable, column, dataType)
 
 	statement, err := db.Prepare(tableSchema)
 	return statement, err

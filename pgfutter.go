@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,10 +32,19 @@ func parseTableName(c *cli.Context, filename string) string {
 	return postgresify(tableName)
 }
 
+func getDataType(c *cli.Context) string {
+	dataType := "json"
+	if c.GlobalBool("jsonb") {
+		dataType = "jsonb"
+	}
+
+	return dataType
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "pgfutter"
-	app.Version = "1.0"
+	app.Version = "1.1"
 	app.Usage = "Import JSON and CSV into PostgreSQL the easy way"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -83,6 +93,10 @@ func main() {
 			EnvVar: "DB_TABLE",
 		},
 		cli.BoolFlag{
+			Name:  "jsonb",
+			Usage: "use JSONB data type",
+		},
+		cli.BoolFlag{
 			Name:  "ignore-errors",
 			Usage: "halt transaction on inconsistencies",
 		},
@@ -100,9 +114,10 @@ func main() {
 				ignoreErrors := c.GlobalBool("ignore-errors")
 				schema := c.GlobalString("schema")
 				tableName := parseTableName(c, filename)
+				dataType := getDataType(c)
 
 				connStr := parseConnStr(c)
-				err := importJSON(filename, connStr, schema, tableName, ignoreErrors)
+				err := importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
 				return err
 			},
 		},
@@ -116,9 +131,10 @@ func main() {
 
 				schema := c.GlobalString("schema")
 				tableName := parseTableName(c, filename)
+				dataType := getDataType(c)
 
 				connStr := parseConnStr(c)
-				err := importJSONObject(filename, connStr, schema, tableName)
+				err := importJSONObject(filename, connStr, schema, tableName, dataType)
 				return err
 			},
 		},
@@ -139,6 +155,10 @@ func main() {
 					Value: ",",
 					Usage: "field delimiter",
 				},
+				cli.BoolFlag{
+					Name:  "skip-parse-delimiter",
+					Usage: "skip parsing escape sequences in the given delimiter",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
@@ -151,8 +171,9 @@ func main() {
 
 				skipHeader := c.Bool("skip-header")
 				fields := c.String("fields")
-				delimiter := c.String("delimiter")
-
+				skipParseheader := c.Bool("skip-parse-delimiter")
+				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
+				fmt.Println(delimiter)
 				connStr := parseConnStr(c)
 				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter)
 				return err
