@@ -106,7 +106,7 @@ func main() {
 		{
 			Name:  "json",
 			Usage: "Import newline-delimited JSON objects into database",
-			Action: func(c *cli.Context) {
+			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
 				filename := c.Args().First()
@@ -118,13 +118,13 @@ func main() {
 
 				connStr := parseConnStr(c)
 				err := importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
-				exitOnError(err)
+				return err
 			},
 		},
 		{
 			Name:  "jsonobj",
 			Usage: "Import single JSON object into database",
-			Action: func(c *cli.Context) {
+			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
 				filename := c.Args().First()
@@ -135,7 +135,7 @@ func main() {
 
 				connStr := parseConnStr(c)
 				err := importJSONObject(filename, connStr, schema, tableName, dataType)
-				exitOnError(err)
+				return err
 			},
 		},
 		{
@@ -160,7 +160,7 @@ func main() {
 					Usage: "skip parsing escape sequences in the given delimiter",
 				},
 			},
-			Action: func(c *cli.Context) {
+			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
 
 				filename := c.Args().First()
@@ -176,7 +176,7 @@ func main() {
 				fmt.Println(delimiter)
 				connStr := parseConnStr(c)
 				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter)
-				exitOnError(err)
+				return err
 			},
 		},
 	}

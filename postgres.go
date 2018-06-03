@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"math/rand"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -53,23 +55,16 @@ func postgresify(identifier string) string {
 		"-": "_",
 		",": "_",
 		"#": "_",
-		
-		"[":  "",
-		"]":  "",
-		"{":  "",
-		"}":  "",
-		"(":  "",
-		")":  "",
-		"?":  "",
-		"!":  "",
-		"$":  "",
-		"%":  "",
-		"*":  "",
-		"\"": "",
 	}
 	for oldString, newString := range replacements {
 		str = strings.Replace(str, oldString, newString, -1)
 	}
+
+	reg, err := regexp.Compile("[^A-Za-z0-9_]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	str = reg.ReplaceAllString(str, "")
 
 	if len(str) == 0 {
 		str = fmt.Sprintf("_col%d", rand.Intn(10000))
