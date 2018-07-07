@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/cheggaaa/pb"
+	csv "github.com/JensRantil/go-csv"
 )
 
 func containsDelimiter(col string) bool {
@@ -48,7 +48,9 @@ func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string,
 		}
 	} else {
 		columns, err = reader.Read()
+		fmt.Printf("%v columns\n%v\n", len(columns), columns)
 		if err != nil {
+			fmt.Printf("FOUND ERR\n")
 			return nil, err
 		}
 	}
@@ -120,13 +122,24 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 	return nil, success, failed
 }
 
-func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string) error {
+func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string, excel bool) error {
 
 	db, err := connect(connStr, schema)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
+
+	dialect := csv.Dialect{}
+	dialect.Delimiter, _ = utf8.DecodeRuneInString(delimiter)
+
+	// Excel 2008 and 2011 and possibly other versions uses a carriage return \r
+	// rather than a line feed \n as a newline
+	if excel {
+		dialect.LineTerminator = "\r"
+	} else {
+		dialect.LineTerminator = "\n"
+	}
 
 	var reader *csv.Reader
 	var bar *pb.ProgressBar
@@ -138,20 +151,15 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 		defer file.Close()
 
 		bar = NewProgressBar(file)
-		reader = csv.NewReader(io.TeeReader(file, bar))
+		reader = csv.NewDialectReader(io.TeeReader(file, bar), dialect)
 	} else {
-		reader = csv.NewReader(os.Stdin)
+		reader = csv.NewDialectReader(os.Stdin, dialect)
 	}
-
-	reader.Comma, _ = utf8.DecodeRuneInString(delimiter)
-	reader.LazyQuotes = true
 
 	columns, err := parseColumns(reader, skipHeader, fields)
 	if err != nil {
 		return err
 	}
-
-	reader.FieldsPerRecord = len(columns)
 
 	i, err := NewCSVImport(db, schema, tableName, columns)
 	if err != nil {

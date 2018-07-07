@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -126,6 +125,10 @@ func main() {
 			Usage: "Import CSV into database",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
+					Name:  "excel",
+					Usage: "support problematic Excel 2008 and Excel 2011 csv line endings",
+				},
+				cli.BoolFlag{
 					Name:  "skip-header",
 					Usage: "skip header row",
 				},
@@ -155,10 +158,10 @@ func main() {
 				skipHeader := c.Bool("skip-header")
 				fields := c.String("fields")
 				skipParseheader := c.Bool("skip-parse-delimiter")
+				excel := c.Bool("excel")
 				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
-				fmt.Println(delimiter)
 				connStr := parseConnStr(c)
-				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter)
+				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel)
 				return err
 			},
 		},
