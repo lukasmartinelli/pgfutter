@@ -2,7 +2,7 @@
 
 <img align="right" alt="elephant" src="elephant.jpg" />
 
-Import CSV (RFC 4180) and JSON into PostgreSQL the easy way.
+Import CSV and line delimited JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
