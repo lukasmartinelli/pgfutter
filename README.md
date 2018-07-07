@@ -2,7 +2,7 @@
 
 <img align="right" alt="elephant" src="elephant.jpg" />
 
-Import CSV and JSON into PostgreSQL the easy way.
+Import CSV (RFC 4180) and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
@@ -13,6 +13,7 @@ Features:
 - Easy deployment
 - Dealing with import errors
 - Import over the network
+- Only supports UTF8 encoding
 
 > Check out [pgclimb](https://github.com/lukasmartinelli/pgclimb) for exporting data from PostgreSQL into different data formats.
 
