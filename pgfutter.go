@@ -43,7 +43,7 @@ func getDataType(c *cli.Context) string {
 func main() {
 	app := cli.NewApp()
 	app.Name = "pgfutter"
-	app.Version = "1.1"
+	app.Version = "1.2"
 	app.Usage = "Import JSON and CSV into PostgreSQL the easy way"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
