@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -122,26 +121,13 @@ func main() {
 			},
 		},
 		{
-			Name:  "jsonobj",
-			Usage: "Import single JSON object into database",
-			Action: func(c *cli.Context) error {
-				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
-
-				filename := c.Args().First()
-
-				schema := c.GlobalString("schema")
-				tableName := parseTableName(c, filename)
-				dataType := getDataType(c)
-
-				connStr := parseConnStr(c)
-				err := importJSONObject(filename, connStr, schema, tableName, dataType)
-				return err
-			},
-		},
-		{
 			Name:  "csv",
 			Usage: "Import CSV into database",
 			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "excel",
+					Usage: "support problematic Excel 2008 and Excel 2011 csv line endings",
+				},
 				cli.BoolFlag{
 					Name:  "skip-header",
 					Usage: "skip header row",
@@ -172,10 +158,10 @@ func main() {
 				skipHeader := c.Bool("skip-header")
 				fields := c.String("fields")
 				skipParseheader := c.Bool("skip-parse-delimiter")
+				excel := c.Bool("excel")
 				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
-				fmt.Println(delimiter)
 				connStr := parseConnStr(c)
-				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter)
+				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel)
 				return err
 			},
 		},

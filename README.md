@@ -2,7 +2,7 @@
 
 <img align="right" alt="elephant" src="elephant.jpg" />
 
-Import CSV and JSON into PostgreSQL the easy way.
+Import CSV (RFC 4180) and JSON into PostgreSQL the easy way.
 This small tool abstract all the hassles and swearing you normally
 have to deal with when you just want to dump some data into the database.
 
@@ -13,6 +13,7 @@ Features:
 - Easy deployment
 - Dealing with import errors
 - Import over the network
+- Only supports UTF8 encoding
 
 > Check out [pgclimb](https://github.com/lukasmartinelli/pgclimb) for exporting data from PostgreSQL into different data formats.
 
@@ -232,15 +233,6 @@ This works the same for invalid JSON objects.
 pgfutter csv --table violations traffic_violations.csv
 ```
 
-### Import single JSON object
-
-Instead of using JSON lines you can also [import a single JSON object](https://github.com/lukasmartinelli/pgfutter/issues/9)
-into the database. This will load the JSON document into memory first.
-
-```bash
-pgfutter jsonobj document.json
-```
-
 ## Alternatives
 
 For more sophisticated needs you should take a look at [pgloader](http://pgloader.io).
@@ -267,5 +259,6 @@ We use [gox](https://github.com/mitchellh/gox) to create distributable
 binaries for Windows, OSX and Linux.
 
 ```bash
-docker run --rm -v "$(pwd)":/usr/src/pgfutter -w /usr/src/pgfutter tcnksm/gox:1.4.2-light
+docker run --rm -v "$(pwd)":/usr/src/pgfutter -w /usr/src/pgfutter tcnksm/gox:1.9
+
 ```

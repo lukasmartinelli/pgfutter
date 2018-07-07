@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -65,42 +64,6 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 	}
 
 	return nil, success, failed
-}
-
-func importJSONObject(filename string, connStr string, schema string, tableName string, dataType string) error {
-	db, err := connect(connStr, schema)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	// The entire file is read into memory because we need to add
-	// it into the PostgreSQL transaction, this will hit memory limits
-	// for big JSON objects
-	var bytes []byte
-	if filename == "" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		bytes, err = ioutil.ReadFile(filename)
-	}
-	if err != nil {
-		return err
-	}
-
-	i, err := NewJSONImport(db, schema, tableName, "data", dataType)
-	if err != nil {
-		return err
-	}
-
-	// The JSON file is not validated at client side
-	// it is just copied into the database
-	// If the JSON file is corrupt PostgreSQL will complain when querying
-	err = i.AddRow(string(bytes))
-	if err != nil {
-		return err
-	}
-
-	return i.Commit()
 }
 
 func importJSON(filename string, connStr string, schema string, tableName string, ignoreErrors bool, dataType string) error {
