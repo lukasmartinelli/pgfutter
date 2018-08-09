@@ -141,6 +141,11 @@ func main() {
 					Value: ",",
 					Usage: "field delimiter",
 				},
+				cli.StringFlag{
+					Name:  "null-delimiter, nd",
+					Value: "\\N",
+					Usage: "null delimiter",
+				},
 				cli.BoolFlag{
 					Name:  "skip-parse-delimiter",
 					Usage: "skip parsing escape sequences in the given delimiter",
@@ -157,11 +162,12 @@ func main() {
 
 				skipHeader := c.Bool("skip-header")
 				fields := c.String("fields")
+				nullDelimiter := c.String("null-delimiter")
 				skipParseheader := c.Bool("skip-parse-delimiter")
 				excel := c.Bool("excel")
 				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
 				connStr := parseConnStr(c)
-				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel)
+				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel, nullDelimiter)
 				return err
 			},
 		},

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/cheggaaa/pb"
 	csv "github.com/JensRantil/go-csv"
+	"github.com/cheggaaa/pb"
 )
 
 func containsDelimiter(col string) bool {
@@ -57,7 +57,8 @@ func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string,
 
 	for _, col := range columns {
 		if containsDelimiter(col) {
-			return columns, errors.New("Please specify the correct delimiter with -d.\nHeader column contains a delimiter character: " + col)
+			return columns, errors.New("Please specify the correct delimiter with -d.\n" +
+				"Header column contains a delimiter character: " + col)
 		}
 	}
 
@@ -68,7 +69,8 @@ func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string,
 	return columns, nil
 }
 
-func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter string, columns []string) (error, int, int) {
+func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool,
+	delimiter string, columns []string, nullDelimiter string) (error, int, int) {
 	success := 0
 	failed := 0
 
@@ -88,7 +90,7 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 				os.Stderr.WriteString(string(line))
 				continue
 			} else {
-				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				err = fmt.Errorf("%s: %s", err, line)
 				return err, success, failed
 			}
 		}
@@ -101,7 +103,7 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 			// cols[i] = col
 		}
 
-		err = i.AddRow(cols...)
+		err = i.AddRow(nullDelimiter, cols...)
 
 		if err != nil {
 			line := strings.Join(record, delimiter)
@@ -111,7 +113,7 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 				os.Stderr.WriteString(string(line))
 				continue
 			} else {
-				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				err = fmt.Errorf("%s: %s", err, line)
 				return err, success, failed
 			}
 		}
@@ -122,7 +124,8 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool, delimiter str
 	return nil, success, failed
 }
 
-func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool, skipHeader bool, fields string, delimiter string, excel bool) error {
+func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool,
+	skipHeader bool, fields string, delimiter string, excel bool, nullDelimiter string) error {
 
 	db, err := connect(connStr, schema)
 	if err != nil {
@@ -169,10 +172,10 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 	var success, failed int
 	if filename != "" {
 		bar.Start()
-		err, success, failed = copyCSVRows(i, reader, ignoreErrors, delimiter, columns)
+		err, success, failed = copyCSVRows(i, reader, ignoreErrors, delimiter, columns, nullDelimiter)
 		bar.Finish()
 	} else {
-		err, success, failed = copyCSVRows(i, reader, ignoreErrors, delimiter, columns)
+		err, success, failed = copyCSVRows(i, reader, ignoreErrors, delimiter, columns, nullDelimiter)
 	}
 
 	if err != nil {
@@ -180,14 +183,14 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 		if !skipHeader {
 			lineNumber++
 		}
-		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
-	} else {
-		fmt.Println(fmt.Sprintf("%d rows imported into %s.%s", success, schema, tableName))
-
-		if ignoreErrors && failed > 0 {
-			fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
-		}
-
-		return i.Commit()
+		return fmt.Errorf("line %d: %s", lineNumber, err)
 	}
+
+	fmt.Println(fmt.Sprintf("%d rows imported into %s.%s", success, schema, tableName))
+
+	if ignoreErrors && failed > 0 {
+		fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
+	}
+
+	return i.Commit()
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -32,7 +31,7 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 		}
 
 		if err != nil {
-			err = errors.New(fmt.Sprintf("%s: %s", err, line))
+			err = fmt.Errorf("%s: %s", err, line)
 			return err, success, failed
 		}
 
@@ -43,7 +42,7 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 				os.Stderr.WriteString(string(line))
 				continue
 			} else {
-				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				err = fmt.Errorf("%s: %s", err, line)
 				return err, success, failed
 			}
 		}
@@ -55,7 +54,7 @@ func copyJSONRows(i *Import, reader *bufio.Reader, ignoreErrors bool) (error, in
 				os.Stderr.WriteString(string(line))
 				continue
 			} else {
-				err = errors.New(fmt.Sprintf("%s: %s", err, line))
+				err = fmt.Errorf("%s: %s", err, line)
 				return err, success, failed
 			}
 		}
@@ -99,14 +98,14 @@ func importJSON(filename string, connStr string, schema string, tableName string
 
 	if err != nil {
 		lineNumber := success + failed
-		return errors.New(fmt.Sprintf("line %d: %s", lineNumber, err))
-	} else {
-		fmt.Println(fmt.Sprintf("%d rows imported into %s.%s", success, schema, tableName))
-
-		if ignoreErrors && failed > 0 {
-			fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
-		}
-
-		return i.Commit()
+		return fmt.Errorf("line %d: %s", lineNumber, err)
 	}
+
+	fmt.Println(fmt.Sprintf("%d rows imported into %s.%s", success, schema, tableName))
+
+	if ignoreErrors && failed > 0 {
+		fmt.Println(fmt.Sprintf("%d rows could not be imported into %s.%s and have been written to stderr.", failed, schema, tableName))
+	}
+
+	return i.Commit()
 }
