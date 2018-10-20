@@ -56,7 +56,15 @@ func newImport(db *sql.DB, schema string, tableName string, columns []string) (*
 	return &Import{txn, stmt}, nil
 }
 
-func (i *Import) AddRow(columns ...interface{}) error {
+func (i *Import) AddRow(nullDelimiter string, columns ...interface{}) error {
+	for index := range columns {
+		column := columns[index]
+
+		if column == nullDelimiter {
+			columns[index] = nil
+		}
+	}
+
 	_, err := i.stmt.Exec(columns...)
 	return err
 }
