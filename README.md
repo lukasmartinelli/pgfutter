@@ -230,7 +230,7 @@ This works the same for invalid JSON objects.
 `pgfutter` will take the sanitized filename as the table name. If you want to specify a custom table name or import into your predefined table schema you can specify the table explicitly.
 
 ```bash
-pgfutter csv --table violations traffic_violations.csv
+pgfutter --table violations csv traffic_violations.csv
 ```
 
 ## Alternatives
