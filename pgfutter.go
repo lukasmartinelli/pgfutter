@@ -9,13 +9,6 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-func exitOnError(err error) {
-	log.SetFlags(0)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
 //Parse table to copy to from given filename or passed flags
 func parseTableName(c *cli.Context, filename string) string {
 	tableName := c.GlobalString("table")
@@ -173,5 +166,8 @@ func main() {
 		},
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
