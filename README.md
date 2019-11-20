@@ -1,4 +1,4 @@
-# pgfutter [![Build Status](https://travis-ci.org/lukasmartinelli/pgfutter.svg?branch=master)](https://travis-ci.org/lukasmartinelli/pgfutter) [![Go Report Card](https://goreportcard.com/badge/github.com/lukasmartinelli/pgfutter)](https://goreportcard.com/report/github.com/lukasmartinelli/pgfutter) ![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)
+# pgfutter [![Build Status](https://travis-ci.com/romnnn/pgfutter.svg?branch=master)](https://travis-ci.org/romnnn/pgfutter)
 
 <img align="right" alt="elephant" src="elephant.jpg" />
 
