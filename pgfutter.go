@@ -40,7 +40,8 @@ func main() {
 	app.Usage = "Import JSON and CSV into PostgreSQL the easy way"
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:   "dbname, db",
+			Name:   "dbname",
+			Aliases:[]string{"db"},
 			Value:  "postgres",
 			Usage:  "database to connect to",
 			EnvVars: []string{"DB_NAME"},
@@ -58,7 +59,8 @@ func main() {
 			EnvVars: []string{"DB_PORT"},
 		},
 		&cli.StringFlag{
-			Name:   "username, user",
+			Name:   "username",
+			Aliases:[]string{"user"},
 			Value:  "postgres",
 			Usage:  "username",
 			EnvVars: []string{"DB_USER"},
@@ -68,7 +70,8 @@ func main() {
 			Usage: "require ssl mode",
 		},
 		&cli.StringFlag{
-			Name:   "pass, pw",
+			Name:   "pass",
+			Aliases:[]string{"pw"},
 			Value:  "",
 			Usage:  "password",
 			EnvVars: []string{"DB_PASS"},
@@ -130,14 +133,16 @@ func main() {
 					Usage: "comma separated field names if no header row",
 				},
 				&cli.StringFlag{
-					Name:  "delimiter, d",
-					Value: ",",
-					Usage: "field delimiter",
+					Name:       "delimiter",
+					Aliases:    []string{"d"},
+					Value:      ",",
+					Usage:      "field delimiter",
 				},
 				&cli.StringFlag{
-					Name:  "null-delimiter, nd",
-					Value: "\\N",
-					Usage: "null delimiter",
+					Name:       "null-delimiter",
+					Aliases:    []string{"nd"},
+					Value:      "\\N",
+					Usage:      "null delimiter",
 				},
 				&cli.BoolFlag{
 					Name:  "skip-parse-delimiter",
