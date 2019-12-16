@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
 	"unicode/utf8"
@@ -63,10 +64,23 @@ func parseColumns(reader *csv.Reader, skipHeader bool, fields string) ([]string,
 	}
 
 	for i, col := range columns {
-		columns[i] = postgresify(col)
+		name := postgresify(col)
+		if inArray(columns[0:i], name) {
+			name += fmt.Sprintf("_%d", rand.Intn(10000))
+		}
+		columns[i] = name
 	}
 
 	return columns, nil
+}
+
+func inArray(arr []string, a string) bool {
+	for _, str := range arr {
+		if str == a {
+			return true
+		}
+	}
+	return false
 }
 
 func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool,
