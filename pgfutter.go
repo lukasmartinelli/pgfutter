@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 //Parse table to copy to from given filename or passed flags

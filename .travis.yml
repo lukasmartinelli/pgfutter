@@ -9,12 +9,7 @@ cache:
   directories:
   - samples
 install:
-  - go get github.com/urfave/cli
-  - go get github.com/lib/pq
-  - go get github.com/kennygrant/sanitize
-  - go get github.com/cheggaaa/pb
-  - go get github.com/JensRantil/go-csv
   - ./download_samples.sh
 script:
-  - go install && ./test.sh
-  - go test
+  - go install github.com/lukasmartinelli/pgfutter && ./test.sh
+  - go test -v github.com/lukasmartinelli/pgfutter
