@@ -5,7 +5,7 @@ SAMPLES_DIR="$CWD/samples"
 function download_json_samples() {
     mkdir -p $SAMPLES_DIR
     cd $SAMPLES_DIR
-    wget -nc wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/json_sample_2015-01-01-15.json
+    wget -nc https://github.com/lukasmartinelli/pgfutter/releases/download/v0.1-alpha/json_sample_2015-01-01-15.json
     cd $CWD
 }
 

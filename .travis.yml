@@ -3,7 +3,7 @@ os: linux
 addons:
   postgresql: "9.4"
 go:
-  - "1.10"
+  - "1.11"
   - tip
 cache:
   directories:

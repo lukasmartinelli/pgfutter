@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,6 +32,17 @@ func getDataType(c *cli.Context) string {
 	}
 
 	return dataType
+}
+
+func getInputFile(c *cli.Context, typ string) (string, error) {
+	filenames := c.Args().Slice()
+	if len(filenames) < 1 {
+		return "", fmt.Errorf("missing %s input file", typ)
+	}
+	if len(filenames) > 1 {
+		return "", fmt.Errorf("need exactly one %s input file, got %d. note that any flags must come before the filename", typ, len(filenames))
+	}
+	return filenames[0], nil
 }
 
 func main() {
@@ -89,6 +101,7 @@ func main() {
 		},
 		&cli.BoolFlag{
 			Name:  "jsonb",
+			Value: false,
 			Usage: "use JSONB data type",
 		},
 		&cli.BoolFlag{
@@ -104,16 +117,18 @@ func main() {
 			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
-				filename := c.Args().First()
-
+				filename, err := getInputFile(c, "json")
+				if err != nil {
+					return err
+				}
+				
 				ignoreErrors := c.Bool("ignore-errors")
 				schema := c.String("schema")
 				tableName := parseTableName(c, filename)
 				dataType := getDataType(c)
 
 				connStr := parseConnStr(c)
-				err := importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
-				return err
+				return importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
 			},
 		},
 		{
@@ -122,6 +137,7 @@ func main() {
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:  "excel",
+					Value: false,
 					Usage: "support problematic Excel 2008 and Excel 2011 csv line endings",
 				},
 				&cli.BoolFlag{
@@ -139,6 +155,12 @@ func main() {
 					Usage:      "field delimiter",
 				},
 				&cli.StringFlag{
+					Name:       "line-terminator",
+					Aliases:    []string{"lb", "line-break", "terminator"},
+					Value:      "",
+					Usage:      "line terminator (default is newline or carriage return for excel)",
+				},
+				&cli.StringFlag{
 					Name:       "null-delimiter",
 					Aliases:    []string{"nd"},
 					Value:      "\\N",
@@ -152,7 +174,10 @@ func main() {
 			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
 
-				filename := c.Args().First()
+				filename, err := getInputFile(c, "csv")
+				if err != nil {
+					return err
+				}
 
 				ignoreErrors := c.Bool("ignore-errors")
 				schema := c.String("schema")
@@ -164,9 +189,10 @@ func main() {
 				skipParseheader := c.Bool("skip-parse-delimiter")
 				excel := c.Bool("excel")
 				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
+				lineTerminator := c.String("line-terminator")
 				connStr := parseConnStr(c)
-				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel, nullDelimiter)
-				return err
+
+				return importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel, nullDelimiter, lineTerminator)
 			},
 		},
 	}
