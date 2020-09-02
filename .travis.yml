@@ -11,5 +11,5 @@ cache:
 install:
   - ./download_samples.sh
 script:
-  - go install github.com/lukasmartinelli/pgfutter && ./test.sh
-  - go test -v github.com/lukasmartinelli/pgfutter
+  - env GO111MODULE=on go install github.com/lukasmartinelli/pgfutter && ./test.sh
+  - env GO111MODULE=on go test -v github.com/lukasmartinelli/pgfutter
