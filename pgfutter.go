@@ -1,24 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli/v2"
 )
-
-func exitOnError(err error) {
-	log.SetFlags(0)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
 
 //Parse table to copy to from given filename or passed flags
 func parseTableName(c *cli.Context, filename string) string {
-	tableName := c.GlobalString("table")
+	tableName := c.String("table")
 	if tableName == "" {
 		if filename == "" {
 			// if no filename is not set, we reading stdin
@@ -33,11 +27,22 @@ func parseTableName(c *cli.Context, filename string) string {
 
 func getDataType(c *cli.Context) string {
 	dataType := "json"
-	if c.GlobalBool("jsonb") {
+	if c.Bool("jsonb") {
 		dataType = "jsonb"
 	}
 
 	return dataType
+}
+
+func getInputFile(c *cli.Context, typ string) (string, error) {
+	filenames := c.Args().Slice()
+	if len(filenames) < 1 {
+		return "", fmt.Errorf("missing %s input file", typ)
+	}
+	if len(filenames) > 1 {
+		return "", fmt.Errorf("need exactly one %s input file, got %d. note that any flags must come before the filename", typ, len(filenames))
+	}
+	return filenames[0], nil
 }
 
 func main() {
@@ -46,107 +51,122 @@ func main() {
 	app.Version = "1.2"
 	app.Usage = "Import JSON and CSV into PostgreSQL the easy way"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "dbname, db",
+		&cli.StringFlag{
+			Name:   "dbname",
+			Aliases:[]string{"db"},
 			Value:  "postgres",
 			Usage:  "database to connect to",
-			EnvVar: "DB_NAME",
+			EnvVars: []string{"DB_NAME"},
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:   "host",
 			Value:  "localhost",
 			Usage:  "host name",
-			EnvVar: "DB_HOST",
+			EnvVars: []string{"DB_HOST"},
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:   "port",
 			Value:  "5432",
 			Usage:  "port",
-			EnvVar: "DB_PORT",
+			EnvVars: []string{"DB_PORT"},
 		},
-		cli.StringFlag{
-			Name:   "username, user",
+		&cli.StringFlag{
+			Name:   "username",
+			Aliases:[]string{"user"},
 			Value:  "postgres",
 			Usage:  "username",
-			EnvVar: "DB_USER",
+			EnvVars: []string{"DB_USER"},
 		},
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:  "ssl",
 			Usage: "require ssl mode",
 		},
-		cli.StringFlag{
-			Name:   "pass, pw",
+		&cli.StringFlag{
+			Name:   "pass",
+			Aliases:[]string{"pw"},
 			Value:  "",
 			Usage:  "password",
-			EnvVar: "DB_PASS",
+			EnvVars: []string{"DB_PASS"},
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:   "schema",
 			Value:  "import",
 			Usage:  "database schema",
-			EnvVar: "DB_SCHEMA",
+			EnvVars: []string{"DB_SCHEMA"},
 		},
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:   "table",
 			Usage:  "destination table",
-			EnvVar: "DB_TABLE",
+			EnvVars: []string{"DB_TABLE"},
 		},
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:  "jsonb",
+			Value: false,
 			Usage: "use JSONB data type",
 		},
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:  "ignore-errors",
 			Usage: "halt transaction on inconsistencies",
 		},
 	}
 
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		{
 			Name:  "json",
 			Usage: "Import newline-delimited JSON objects into database",
 			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<json-file>", -1)
 
-				filename := c.Args().First()
-
-				ignoreErrors := c.GlobalBool("ignore-errors")
-				schema := c.GlobalString("schema")
+				filename, err := getInputFile(c, "json")
+				if err != nil {
+					return err
+				}
+				
+				ignoreErrors := c.Bool("ignore-errors")
+				schema := c.String("schema")
 				tableName := parseTableName(c, filename)
 				dataType := getDataType(c)
 
 				connStr := parseConnStr(c)
-				err := importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
-				return err
+				return importJSON(filename, connStr, schema, tableName, ignoreErrors, dataType)
 			},
 		},
 		{
 			Name:  "csv",
 			Usage: "Import CSV into database",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "excel",
+					Value: false,
 					Usage: "support problematic Excel 2008 and Excel 2011 csv line endings",
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:  "skip-header",
 					Usage: "skip header row",
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "fields",
 					Usage: "comma separated field names if no header row",
 				},
-				cli.StringFlag{
-					Name:  "delimiter, d",
-					Value: ",",
-					Usage: "field delimiter",
+				&cli.StringFlag{
+					Name:       "delimiter",
+					Aliases:    []string{"d"},
+					Value:      ",",
+					Usage:      "field delimiter",
 				},
-				cli.StringFlag{
-					Name:  "null-delimiter, nd",
-					Value: "\\N",
-					Usage: "null delimiter",
+				&cli.StringFlag{
+					Name:       "line-terminator",
+					Aliases:    []string{"lb", "line-break", "terminator"},
+					Value:      "",
+					Usage:      "line terminator (default is newline or carriage return for excel)",
 				},
-				cli.BoolFlag{
+				&cli.StringFlag{
+					Name:       "null-delimiter",
+					Aliases:    []string{"nd"},
+					Value:      "\\N",
+					Usage:      "null delimiter",
+				},
+				&cli.BoolFlag{
 					Name:  "skip-parse-delimiter",
 					Usage: "skip parsing escape sequences in the given delimiter",
 				},
@@ -154,10 +174,13 @@ func main() {
 			Action: func(c *cli.Context) error {
 				cli.CommandHelpTemplate = strings.Replace(cli.CommandHelpTemplate, "[arguments...]", "<csv-file>", -1)
 
-				filename := c.Args().First()
+				filename, err := getInputFile(c, "csv")
+				if err != nil {
+					return err
+				}
 
-				ignoreErrors := c.GlobalBool("ignore-errors")
-				schema := c.GlobalString("schema")
+				ignoreErrors := c.Bool("ignore-errors")
+				schema := c.String("schema")
 				tableName := parseTableName(c, filename)
 
 				skipHeader := c.Bool("skip-header")
@@ -166,12 +189,17 @@ func main() {
 				skipParseheader := c.Bool("skip-parse-delimiter")
 				excel := c.Bool("excel")
 				delimiter := parseDelimiter(c.String("delimiter"), skipParseheader)
+				lineTerminator := c.String("line-terminator")
 				connStr := parseConnStr(c)
-				err := importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel, nullDelimiter)
-				return err
+
+				return importCSV(filename, connStr, schema, tableName, ignoreErrors, skipHeader, fields, delimiter, excel, nullDelimiter, lineTerminator)
 			},
 		},
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+    if err != nil {
+        log.SetFlags(0)
+        log.Fatal(err)
+    }
 }

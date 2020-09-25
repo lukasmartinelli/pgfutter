@@ -1,21 +1,15 @@
 language: go
-sudo: false
+os: linux
 addons:
-  postgresql: 9.4
+  postgresql: "9.4"
 go:
-  - 1.8
-  - 1.9
+  - "1.11"
   - tip
 cache:
   directories:
   - samples
 install:
-  - go get github.com/codegangsta/cli
-  - go get github.com/lib/pq
-  - go get github.com/kennygrant/sanitize
-  - go get github.com/cheggaaa/pb
-  - go get github.com/JensRantil/go-csv
   - ./download_samples.sh
 script:
-  - go install && ./test.sh
-  - go test
+  - env GO111MODULE=on go install github.com/lukasmartinelli/pgfutter && ./test.sh
+  - env GO111MODULE=on go test -v github.com/lukasmartinelli/pgfutter

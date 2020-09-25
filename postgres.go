@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/codegangsta/cli"
+	"github.com/urfave/cli/v2"
 	"github.com/kennygrant/sanitize"
 )
 
@@ -81,15 +81,15 @@ func postgresify(identifier string) string {
 //parse sql connection string from cli flags
 func parseConnStr(c *cli.Context) string {
 	otherParams := "sslmode=disable connect_timeout=5"
-	if c.GlobalBool("ssl") {
+	if c.Bool("ssl") {
 		otherParams = "sslmode=require connect_timeout=5"
 	}
 	return fmt.Sprintf("user=%s dbname=%s password='%s' host=%s port=%s %s",
-		c.GlobalString("username"),
-		c.GlobalString("dbname"),
-		c.GlobalString("pass"),
-		c.GlobalString("host"),
-		c.GlobalString("port"),
+		c.String("username"),
+		c.String("dbname"),
+		c.String("pass"),
+		c.String("host"),
+		c.String("port"),
 		otherParams,
 	)
 }

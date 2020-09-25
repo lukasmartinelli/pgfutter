@@ -1,0 +1,19 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    logging:
+      driver: none
+
+  test:
+    build:
+      context: .
+    environment:
+      DB_USER: postgres
+      PGPASSWORD: secret
+      DB_HOST: postgres
+    depends_on:
+      - postgres

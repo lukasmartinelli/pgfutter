@@ -125,7 +125,7 @@ func copyCSVRows(i *Import, reader *csv.Reader, ignoreErrors bool,
 }
 
 func importCSV(filename string, connStr string, schema string, tableName string, ignoreErrors bool,
-	skipHeader bool, fields string, delimiter string, excel bool, nullDelimiter string) error {
+	skipHeader bool, fields string, delimiter string, excel bool, nullDelimiter string, lineTerminator string) error {
 
 	db, err := connect(connStr, schema)
 	if err != nil {
@@ -138,12 +138,16 @@ func importCSV(filename string, connStr string, schema string, tableName string,
 
 	// Excel 2008 and 2011 and possibly other versions uses a carriage return \r
 	// rather than a line feed \n as a newline
-	if excel {
-		dialect.LineTerminator = "\r"
-	} else {
-		dialect.LineTerminator = "\n"
-	}
 
+	dialect.LineTerminator = lineTerminator
+	if dialect.LineTerminator == "" {
+		if excel {
+			dialect.LineTerminator = "\r"
+		} else {
+			dialect.LineTerminator = "\n"
+		}
+	}
+	
 	var reader *csv.Reader
 	var bar *pb.ProgressBar
 	if filename != "" {
